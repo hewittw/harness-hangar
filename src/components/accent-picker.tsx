@@ -31,12 +31,13 @@ export function AccentPicker() {
               localStorage.setItem(ACCENT_KEY, a.id);
             } catch {}
           }}
-          className={`flex h-7 items-center gap-2 rounded-full px-2.5 text-[12.5px] font-medium transition-colors ${
+          aria-label={a.label}
+          className={`flex h-7 items-center gap-2 rounded-full px-2 text-[12.5px] font-medium transition-colors ${
             current === a.id ? "bg-sunken text-ink" : "text-ink-3 hover:text-ink"
           }`}
         >
           <span className="h-3 w-3 rounded-full border border-hairline-2" style={{ background: a.swatch }} />
-          {a.label}
+          <span className="sr-only sm:not-sr-only">{a.label}</span>
         </button>
       ))}
     </div>

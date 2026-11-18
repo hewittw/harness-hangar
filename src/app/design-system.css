@@ -24,6 +24,8 @@
   --danger: #d70015;
   --code-bg: #f3f3f6;
   --grid-dot: rgb(29 29 31 / 0.07);
+  --accent: #c2410c;
+  --accent-ink: #ffffff;
 }
 
 [data-theme="dark"] {
@@ -45,39 +47,45 @@
   --danger: #ff453a;
   --code-bg: #0f0f12;
   --grid-dot: rgb(245 245 247 / 0.06);
-}
-
-/* Accents. Each has a light and dark value tuned for contrast on that canvas. */
-:root,
-[data-accent="ignition"] {
-  --accent: #c2410c;
-  --accent-ink: #ffffff;
-}
-[data-theme="dark"][data-accent="ignition"],
-[data-theme="dark"]:not([data-accent]) {
   --accent: #ff6b2c;
   --accent-ink: #000000;
 }
-[data-accent="blue"] {
+
+/*
+ * Accents. Ignition is the default and lives in the theme blocks above.
+ * Each accent has a light and a dark value; the descendant forms let a nested
+ * [data-theme] (like the side-by-side preview) pick the right one.
+ */
+[data-accent="blue"],
+[data-accent="blue"] [data-theme="light"] {
   --accent: #0071e3;
   --accent-ink: #ffffff;
 }
-[data-theme="dark"][data-accent="blue"] {
+[data-theme="dark"][data-accent="blue"],
+[data-accent="blue"] [data-theme="dark"] {
   --accent: #2997ff;
   --accent-ink: #000000;
 }
-[data-accent="mono"] {
+[data-accent="mono"],
+[data-accent="mono"] [data-theme="light"] {
   --accent: #1d1d1f;
   --accent-ink: #ffffff;
 }
-[data-theme="dark"][data-accent="mono"] {
+[data-theme="dark"][data-accent="mono"],
+[data-accent="mono"] [data-theme="dark"] {
   --accent: #f5f5f7;
   --accent-ink: #000000;
 }
 
-:root {
+/* Derived accent tints are declared wherever the accent can change, so they follow it. */
+:root,
+[data-theme],
+[data-accent] {
   --accent-soft: color-mix(in oklab, var(--accent) 12%, transparent);
   --accent-line: color-mix(in oklab, var(--accent) 45%, transparent);
+}
+
+:root {
   --r-sm: 8px;
   --r-md: 12px;
   --r-lg: 18px;
