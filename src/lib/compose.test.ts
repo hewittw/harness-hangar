@@ -61,4 +61,17 @@ describe("compose", () => {
     const r = compose({ sourceParts: parts, selectedPartIds: ["b1", "a1", "a5"] });
     expect(r.ok && r.parts.map((p) => p.name)).toEqual(["r1", "r2", "deny env", "deny push", "same"]);
   });
+
+  it("never lets a same-named allow rule replace a deny rule", () => {
+    const both: StoredPart[] = [
+      { id: "x1", harness_id: A, kind: "permission", name: "Bash(git push:*)", content: { effect: "allow", rule: "Bash(git push:*)" } },
+      { id: "y1", harness_id: B, kind: "permission", name: "Bash(git push:*)", content: { effect: "deny", rule: "Bash(git push:*)" } },
+    ];
+    for (const resolutions of [undefined, { "permission:Bash(git push:*)": "x1" }]) {
+      const r = compose({ sourceParts: both, selectedPartIds: ["x1"], resolutions });
+      expect(r.ok).toBe(true);
+      if (!r.ok) return;
+      expect(r.parts).toEqual([{ kind: "permission", name: "Bash(git push:*)", content: { effect: "deny", rule: "Bash(git push:*)" } }]);
+    }
+  });
 });

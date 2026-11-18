@@ -2,8 +2,8 @@ import "server-only";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { admin } from "./admin";
 import { hashToken, looksLikeToken } from "../tokens";
-import { LIMITS, type HarnessInput, type PartInput, type PartKind, type StoredPart } from "../harness";
-import { formatFindings, scanParts } from "../scan";
+import { LIMITS, partInput, type HarnessInput, type PartInput, type PartKind, type StoredPart } from "../harness";
+import { formatFindings, scanHarnessMeta, scanParts } from "../scan";
 import { compose, keyOf } from "../compose";
 
 /**
@@ -24,6 +24,16 @@ export type HarnessDetail = Omit<HarnessSummary, "counts"> & { parts: StoredPart
 
 export type Result<T> = { ok: true; value: T } | { ok: false; message: string };
 
+/** Per-user cap. 25 harnesses × 1.5 MB keeps one account well inside the free database. */
+export const MAX_HARNESSES_PER_USER = 25;
+
+/** Log the real error server-side; give callers a fixed message (no database internals). */
+class StoreError extends Error {}
+function fail(context: string, error: unknown): never {
+  console.error(context, error);
+  throw new StoreError("Hangar hit a database error. Nothing was changed. Try again in a minute.");
+}
+
 const emptyCounts = (): Record<PartKind, number> => ({ rule: 0, skill: 0, agent: 0, mcp_server: 0, permission: 0, hook: 0 });
 
 /** Returns the Clerk user id for a valid, unrevoked token. */
@@ -35,7 +45,8 @@ export async function authenticateToken(token: string): Promise<{ userId: string
     .eq("token_hash", hashToken(token))
     .is("revoked_at", null)
     .maybeSingle();
-  if (error || !data) return null;
+  if (error) throw error; // an outage is not an invalid token; the route turns this into a 503
+  if (!data) return null;
   // Best effort; never block a request on this.
   void admin().from("api_tokens").update({ last_used_at: new Date().toISOString() }).eq("id", data.id).then(() => {});
   return { userId: data.user_id, tokenId: data.id };
@@ -68,10 +79,23 @@ export async function saveHarness(
     };
   }
 
-  const findings = scanParts(input.parts);
+  const findings = [...scanHarnessMeta(input), ...scanParts(input.parts)];
   if (findings.length) return { ok: false, message: formatFindings(findings) };
 
   const existing = await findHarnessId(userId, input.name);
+  if (!existing) {
+    const { count, error: countError } = await admin()
+      .from("harnesses")
+      .select("id", { count: "exact", head: true })
+      .eq("user_id", userId);
+    if (countError) fail("count harnesses", countError);
+    if ((count ?? 0) >= MAX_HARNESSES_PER_USER) {
+      return {
+        ok: false,
+        message: `The library is full (${MAX_HARNESSES_PER_USER} harnesses). Ask the user to delete one on the website, or replace an existing harness. Nothing was saved.`,
+      };
+    }
+  }
   const { data, error } = await admin().rpc("save_harness", {
     p_user_id: userId,
     p_name: input.name,
@@ -95,7 +119,8 @@ export async function saveHarness(
 }
 
 async function findHarnessId(userId: string, name: string): Promise<string | null> {
-  const { data } = await admin().from("harnesses").select("id").eq("user_id", userId).eq("name", name).maybeSingle();
+  const { data, error } = await admin().from("harnesses").select("id").eq("user_id", userId).eq("name", name).maybeSingle();
+  if (error) fail("find harness", error);
   return data?.id ?? null;
 }
 
@@ -105,7 +130,7 @@ export async function listHarnesses(userId: string, db: SupabaseClient = admin()
     .select("id, name, description, source, updated_at, harness_parts(kind)")
     .eq("user_id", userId)
     .order("updated_at", { ascending: false });
-  if (error) throw error;
+  if (error) fail("list harnesses", error);
   return (data ?? []).map((h) => {
     const counts = emptyCounts();
     for (const p of (h.harness_parts as { kind: PartKind }[]) ?? []) counts[p.kind]++;
@@ -121,7 +146,8 @@ export async function getHarness(
   let q = db.from("harnesses").select("id, name, description, source, updated_at").eq("user_id", userId);
   q = "id" in by ? q.eq("id", by.id) : q.eq("name", by.name);
   const { data: h, error } = await q.maybeSingle();
-  if (error || !h) return null;
+  if (error) fail("get harness", error);
+  if (!h) return null;
   const parts = await loadParts(userId, [h.id], db);
   return { ...h, parts };
 }
@@ -134,10 +160,18 @@ export async function loadParts(userId: string, harnessIds: string[], db: Supaba
     .eq("user_id", userId)
     .in("harness_id", harnessIds)
     .order("position", { ascending: true });
-  if (error) throw error;
+  if (error) fail("load parts", error);
+  // Never trust stored rows blindly: re-check each one against the same schema uploads must pass,
+  // so a malformed row can't reach install (paths) or compose.
+  const valid: StoredPart[] = [];
+  for (const row of data ?? []) {
+    const parsed = partInput.safeParse({ kind: row.kind, name: row.name, content: row.content });
+    if (parsed.success) valid.push({ ...parsed.data, id: row.id, harness_id: row.harness_id, position: row.position });
+    else console.error("dropping invalid stored part", row.id, parsed.error.issues[0]?.message);
+  }
   // Keep harness order as given.
   const rank = new Map(harnessIds.map((id, i) => [id, i]));
-  return ((data ?? []) as StoredPart[]).sort(
+  return valid.sort(
     (a, b) => rank.get(a.harness_id)! - rank.get(b.harness_id)! || (a.position ?? 0) - (b.position ?? 0),
   );
 }
