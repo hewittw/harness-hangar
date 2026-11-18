@@ -149,7 +149,7 @@ function Cmd({ text }: { text: string }) {
 
 function Expect({ children }: { children: ReactNode }) {
   return (
-    <p className="flex items-start gap-3 rounded-ds-md border border-[var(--accent-line)] bg-accent-soft px-4 py-3 text-[15px] leading-snug">
+    <p className="flex flex-col gap-1.5 rounded-ds-md border border-[var(--accent-line)] bg-accent-soft px-4 py-3 text-[15px] leading-snug sm:flex-row sm:items-start sm:gap-3">
       <span className="ds-label mt-[3px] shrink-0 !text-accent">You should see</span>
       <span className="text-ink">{children}</span>
     </p>

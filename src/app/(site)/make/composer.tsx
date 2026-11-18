@@ -564,8 +564,8 @@ function PartRow({
               </span>
             )}
             {locked && (
-              <span className="ds-chip ds-chip-accent -my-0.5 !h-6 !text-[11.5px]">
-                always included
+              <span className={`ds-chip -my-0.5 !h-6 !text-[11.5px] ${checked ? "ds-chip-accent" : ""}`}>
+                {checked ? "always included" : "comes with this harness"}
               </span>
             )}
           </span>
@@ -602,7 +602,7 @@ function ByType(ctx: TypeCtx) {
 }
 
 function GroupedSection({ ctx, kind, note }: { ctx: TypeCtx; kind: PartKind; note?: string }) {
-  const { harnesses, parts, selected, sourceIds, openGroups, toggleGroup, setKindAll, row } = ctx;
+  const { harnesses, parts, selected, openGroups, toggleGroup, setKindAll, row } = ctx;
   const groups = harnesses
     .map((h) => ({ h, items: parts.filter((p) => p.harness_id === h.id && p.kind === kind) }))
     .filter((g) => g.items.length > 0);
@@ -615,7 +615,8 @@ function GroupedSection({ ctx, kind, note }: { ctx: TypeCtx; kind: PartKind; not
           const key = `${kind}:${h.id}`;
           const isOpen = openGroups.has(key);
           const optional = items.filter((p) => !isDeny(p));
-          const picked = items.filter((p) => (isDeny(p) ? sourceIds.includes(h.id) : selected.has(p.id))).length;
+          // Same count as the By harness view: parts you picked (deny rules follow the source, so they aren't counted).
+          const picked = items.filter((p) => selected.has(p.id)).length;
           return (
             <div key={key} className={`rounded-ds-md border bg-canvas/40 ${picked ? "border-[var(--accent-line)]" : "border-hairline"}`}>
               <button

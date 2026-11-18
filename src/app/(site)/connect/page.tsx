@@ -44,6 +44,17 @@ const nextSteps = (tryName: string | null): { cmd: string; text: ReactNode }[] =
   },
 ];
 
+// "just now", "5 min ago", "3 h ago", "2 days ago": independent of the server's time zone.
+const ago = (iso: string) => {
+  const mins = Math.max(0, Math.round((Date.now() - new Date(iso).getTime()) / 60000));
+  if (mins < 1) return "just now";
+  if (mins < 60) return `${mins} min ago`;
+  const hrs = Math.round(mins / 60);
+  if (hrs < 24) return `${hrs} h ago`;
+  const days = Math.round(hrs / 24);
+  return `${days} day${days === 1 ? "" : "s"} ago`;
+};
+
 export default async function ConnectPage() {
   const { db, userId } = await userDb();
   await ensureSeeded(userId);
@@ -81,7 +92,7 @@ export default async function ConnectPage() {
                 ? {
                     count: active.length,
                     latestLabel: active[0].label,
-                    latestUsed: active[0].last_used_at ? when(active[0].last_used_at) : null,
+                    latestUsed: active[0].last_used_at ? ago(active[0].last_used_at) : null,
                   }
                 : null
             }
@@ -169,7 +180,7 @@ export default async function ConnectPage() {
                 <div className="flex flex-wrap items-center justify-between gap-3 sm:justify-end">
                   {t.last_used_at ? (
                     <span className="ds-chip ds-chip-ok">
-                      <span className="ds-dot" /> Last used {when(t.last_used_at)}
+                      <span className="ds-dot" /> Last used {ago(t.last_used_at)}
                     </span>
                   ) : (
                     <span className="ds-chip">Never used</span>
