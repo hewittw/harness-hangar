@@ -18,6 +18,14 @@ Look in the current project folder for:
 - .mcp.json
 - Hook scripts that settings.json runs, if they are inside the project
 - This project's auto-memory: ~/.claude/projects/<this folder's path with / replaced by ->/memory/*.md
+
+Skills and MCP servers often live outside the project, so also check:
+- User-level skills and subagents: ~/.claude/skills/*/ and ~/.claude/agents/*.md
+- Plugin skills: ~/.claude/plugins/**/skills/*/SKILL.md (only the ones this project actually uses)
+- User-level MCP servers: run \`claude mcp list\` to see which servers are available here. Read each config's command, args and URL, but never copy literal keys, tokens or headers (use \${VAR} placeholders). Leave out the "hangar" server itself.
+
+Then read AGENTS.md, CLAUDE.md, README.md, docs/*.md, skills-lock.json and any other Markdown in the project root for skills, slash commands or MCP servers they mention (for example "use the verify-ui skill", "/up-to-speed", "the Supabase MCP"). For each one, find its files in the places above and include it. If a mentioned skill can't be found, note it for step 4.
+
 Never open .env files or anything matching .env*.
 
 ## 2. Distill the instructions and memory into rules
@@ -33,8 +41,10 @@ Turn CLAUDE.md, AGENTS.md and memory into short, portable rules. Each rule is on
 - Permissions: one part per rule, with effect allow, ask or deny. Name it after the rule.
 - Hooks: one part per hook entry, with event, matcher and hooks. Put any scripts it runs in files, with paths relative to .claude/hooks/.
 
-## 4. Show the user what will leave their machine
-Show a compact summary: how many rules (list them), and the names of the skills, subagents, MCP servers, permissions and hooks. Point out anything you dropped or rewrote for privacy. Ask the user to confirm, or to name anything to leave out. ${name ? "" : "Ask what to call this harness (suggest a name based on what the project is for). "}Wait for their answer.
+## 4. Ask about anything missing, then show what will leave their machine
+First ask the user one question: "Are there other skills or MCP servers you use with this project that I didn't find?" List any mentioned-but-missing skills from step 1 so they can point you to them. Add whatever they name (finding the files as in step 1), then continue.
+
+Show a compact summary: how many rules (list them), and the names of the skills, subagents, MCP servers, permissions and hooks, marking which came from outside the project (user-level or plugin). Point out anything you dropped or rewrote for privacy. Ask the user to confirm, or to name anything to leave out. ${name ? "" : "Ask what to call this harness (suggest a name based on what the project is for). "}Wait for their answer.
 
 ## 5. Save
 Call save_harness with name, a one-line description of what kind of work this harness is for, and the parts.
