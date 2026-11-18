@@ -12,7 +12,17 @@ export default function AboutPage() {
           What we built, <span className="ds-brand-text">and what&apos;s next.</span>
         </>
       }
-      lede="Hangar is a home for Claude Code harnesses: everything around the model that makes Claude work the way you like. This page explains what works in this version, why we spent so much of it on design, and where the next iteration goes."
+      lede="Hangar is a home for Claude Code harnesses: everything around the model that makes Claude work the way you like. This page explains what works in this version, why we spent so much of it on design, and our plan for the next iteration."
+      actions={
+        <>
+          <a href="#v2-plan" className="ds-btn ds-btn-brand ds-btn-lg">
+            Jump to the v2 plan ↓
+          </a>
+          <Link href="/demo" className="ds-btn ds-btn-glass ds-btn-lg">
+            Demo guide
+          </Link>
+        </>
+      }
     >
       <ProseSection n="01" title="The problem">
         <p>
@@ -78,32 +88,87 @@ export default function AboutPage() {
         </p>
       </ProseSection>
 
-      <ProseSection n="05" title="What comes next">
+      <ProseSection n="05" id="v2-plan" title="Plan for v2">
         <p>
-          <b>A public marketplace.</b> Right now every library is private. Next, people can publish harnesses, browse and install
-          other people&apos;s, and share a harness with a link. Installs from strangers will need a stronger review step before
-          hooks or allow rules are written.
+          This plan starts from what we saw when people actually used v1: where they got stuck, what confused them, and what
+          they asked for. Each item says what we observed and what we&apos;ll do about it.
         </p>
-        <p>
-          <b>Write your own skills in Make.</b> Today a new harness can only reuse parts you already have. Next, the Make page gets
-          a skill editor: describe what the skill should do, write or generate its <code>SKILL.md</code> and any helper files, and
-          add it to the harness you&apos;re building. New skills go through the same leak scan as everything else.
-        </p>
-        <p>
-          <b>Smoother connecting.</b> Personal tokens work, but signing in with OAuth would remove the copy-and-paste step. User
-          testing also showed that the install command&apos;s <code>[name]</code> hint doesn&apos;t say what to type, so the next
-          version makes that obvious.
-        </p>
-        <p>
-          <b>An AI guide on the website.</b> An assistant that helps you compose a harness by describing what you want (&ldquo;a
-          setup for my lab&apos;s Python projects&rdquo;), and keeps up with new skills and MCP servers worth adding.
-        </p>
-        <p>
-          <b>Beyond Claude Code.</b> Support for Claude Desktop and other agents, and a private &ldquo;exact copy&rdquo; mode for
-          people who want to keep project-specific details for themselves.
-        </p>
+
+        <h3 className="ds-h3 !mt-4 text-ink">What we saw in testing</h3>
+        <ul className="flex list-disc flex-col gap-2 pl-5 marker:text-accent">
+          <li>
+            <b>The install command&apos;s <code>[name]</code> hint gave no clue what to type</b>, so testers stopped at the prompt.
+            In v1 we renamed it <code>[harness]</code>, added name suggestions and a ready-to-copy command on Connect, but the
+            first step still asks too much.
+          </li>
+          <li>
+            <b>People ran commands in the wrong folder</b>: inside an existing project, or in a folder synced to iCloud. Nothing
+            told them they were in the wrong place.
+          </li>
+          <li>
+            <b>Saving missed skills</b> that were installed for the whole computer or came from plugins. v1 now searches those
+            places and asks, but the user can&apos;t see or edit the list before it uploads.
+          </li>
+          <li>
+            <b>Tokens ended up in screenshots.</b> Copying a secret into a terminal is the riskiest and most confusing step of
+            setup.
+          </li>
+          <li>
+            <b>After making a token, the page looked like nothing had happened</b>, and composing from many harnesses was hard to
+            scan. Both were fixed in v1 with a Connected state and a &ldquo;by part type&rdquo; view.
+          </li>
+        </ul>
+
+        <h3 className="ds-h3 !mt-6 text-ink">Fix first</h3>
+        <ol className="flex list-decimal flex-col gap-2 pl-5 marker:font-semibold marker:text-accent">
+          <li>
+            <b>Sign in to Claude Code with OAuth instead of tokens.</b> One click in the browser, nothing to copy, nothing to leak
+            in a screenshot.
+          </li>
+          <li>
+            <b>Safer installs.</b> Check that the folder is empty (and not in iCloud) before writing, show a preview of every file,
+            and offer undo.
+          </li>
+          <li>
+            <b>Review saves on the website.</b> After Claude collects a setup, show the found skills, MCP servers and rules as a
+            checklist where the user can add or remove items before it is stored.
+          </li>
+          <li>
+            <b>Clearer first run.</b> Starter-pack cards show which packs are already loaded, and the install step names a
+            harness by default instead of asking.
+          </li>
+          <li>
+            <b>Full contrast on the gradient buttons</b> so every control meets accessibility guidelines.
+          </li>
+        </ol>
+
+        <h3 className="ds-h3 !mt-6 text-ink">Add next</h3>
+        <ul className="flex list-disc flex-col gap-2 pl-5 marker:text-accent">
+          <li>
+            <b>Write your own skills in Make.</b> Describe what a skill should do, write or generate its <code>SKILL.md</code> and
+            helper files, and add it to the harness you&apos;re building. New skills go through the same leak scan.
+          </li>
+          <li>
+            <b>A public marketplace.</b> Publish harnesses, browse and install other people&apos;s, and share one with a link.
+            Installs from strangers get a stronger review step before any hook or allow rule is written.
+          </li>
+          <li>
+            <b>An AI guide on the website</b> that builds a harness from a description (&ldquo;a setup for my lab&apos;s Python
+            projects&rdquo;) and surfaces new skills and MCP servers worth adding.
+          </li>
+          <li>
+            <b>Updates for installed harnesses.</b> See what changed since you installed one and pull the new version.
+          </li>
+        </ul>
+
+        <h3 className="ds-h3 !mt-6 text-ink">Later</h3>
+        <ul className="flex list-disc flex-col gap-2 pl-5 marker:text-accent">
+          <li>Support for Claude Desktop and other agents, not just Claude Code.</li>
+          <li>Shared team libraries, and a private &ldquo;exact copy&rdquo; mode that keeps project-specific details.</li>
+        </ul>
+
         <p className="pt-2">
-          Want to try it?{" "}
+          Want to try v1 first?{" "}
           <Link href="/demo" className="font-semibold text-accent underline-offset-4 hover:underline">
             Follow the demo guide
           </Link>
