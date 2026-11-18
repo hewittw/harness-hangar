@@ -1,4 +1,5 @@
 import { createMcpHandler } from "mcp-handler";
+import { completable } from "@modelcontextprotocol/server";
 import { z } from "zod";
 import { harnessInput, PART_KINDS, type PartKind } from "@/lib/harness";
 import { buildInstallTree } from "@/lib/install";
@@ -61,7 +62,13 @@ function safe<A extends unknown[]>(fn: (...args: A) => Promise<ToolResult>): (..
   };
 }
 
-const handler = createMcpHandler(
+/**
+ * Built per request with the signed-in user baked in, so prompt-argument completions
+ * (which get no auth context from the SDK) can suggest that user's own harness names.
+ * The server is stateless per request anyway, so this costs almost nothing.
+ */
+const buildHandler = (userId: string) =>
+  createMcpHandler(
   (server) => {
     server.registerTool(
       "save_harness",
@@ -264,9 +271,11 @@ const handler = createMcpHandler(
       {
         title: "Save this folder's harness to Hangar",
         description: "Collect, distill and save the current project's Claude Code harness.",
-        argsSchema: z.object({ name: z.string().optional().describe("Name for the harness") }),
+        argsSchema: z.object({
+          save_as: z.string().optional().describe("Name to save the harness as. Leave blank and Claude will suggest one."),
+        }),
       },
-      ({ name }) => ({ messages: [{ role: "user", content: { type: "text", text: saveHarnessPrompt(name) } }] }),
+      ({ save_as }) => ({ messages: [{ role: "user", content: { type: "text", text: saveHarnessPrompt(save_as) } }] }),
     );
 
     server.registerPrompt(
@@ -274,13 +283,21 @@ const handler = createMcpHandler(
       {
         title: "Install a Hangar harness into this folder",
         description: "Set up this folder as a new Claude Code project from one of your harnesses.",
-        argsSchema: z.object({ name: z.string().optional().describe("Harness name") }),
+        argsSchema: z.object({
+          // The SDK looks for the completer under .optional(), so completable() wraps the inner string.
+          harness: completable(z.string().describe("Harness to install. Leave blank to pick from your library."), async (value) => {
+            await ensureSeeded(userId);
+            const q = (value ?? "").toLowerCase();
+            const names = (await listHarnesses(userId)).map((h) => h.name);
+            return names.filter((n) => n.toLowerCase().includes(q)).slice(0, 20);
+          }).optional(),
+        }),
       },
-      ({ name }) => ({ messages: [{ role: "user", content: { type: "text", text: installHarnessPrompt(name) } }] }),
+      ({ harness }) => ({ messages: [{ role: "user", content: { type: "text", text: installHarnessPrompt(harness) } }] }),
     );
   },
   { serverInfo: { name: "hangar", version: "0.1.0" } },
-);
+  );
 
 async function authed(req: Request): Promise<Response> {
   const header = req.headers.get("authorization") ?? "";
@@ -316,7 +333,7 @@ async function authed(req: Request): Promise<Response> {
     });
   }
   (req as Request & { auth?: unknown }).auth = { token, clientId: who.userId, scopes: [], extra: { tokenId: who.tokenId } };
-  return handler(req);
+  return buildHandler(who.userId)(req);
 }
 
 /** The JSON-RPC id of a single POSTed request, so the 429 answers the call it refuses. Null otherwise. */

@@ -5,9 +5,7 @@ import { createToken } from "@/app/actions";
 import { CopyButton } from "@/components/copy-button";
 
 type Connected = { count: number; latestLabel: string; latestUsed: string | null };
-const TRY_CMD = "/mcp__hangar__install-harness";
-
-export function TokenMaker({ mcpUrl, connected }: { mcpUrl: string; connected: Connected | null }) {
+export function TokenMaker({ mcpUrl, connected, tryCmd }: { mcpUrl: string; connected: Connected | null; tryCmd: string }) {
   const [label, setLabel] = useState("My laptop");
   const [adding, setAdding] = useState(false);
   const [token, setToken] = useState<string | null>(null);
@@ -81,10 +79,10 @@ export function TokenMaker({ mcpUrl, connected }: { mcpUrl: string; connected: C
           </p>
           <div className="mt-6 rounded-ds-md border border-hairline bg-sunken/60 p-4">
             <p className="ds-label !text-accent">Try it now</p>
-            <p className="ds-small mt-2">In a new, empty folder, start Claude Code and run this. Press Enter and Claude lists your harnesses.</p>
+            <p className="ds-small mt-2">In a new, empty folder, start Claude Code and run this. It&apos;s the simplest harness in your library.</p>
             <div className="mt-3 flex flex-col gap-2 sm:flex-row sm:items-start">
-              <pre className="ds-code min-w-0 flex-1 !break-normal">{TRY_CMD}</pre>
-              <CopyButton text={TRY_CMD} />
+              <pre className="ds-code min-w-0 flex-1 !break-normal">{tryCmd}</pre>
+              <CopyButton text={tryCmd} />
             </div>
           </div>
           <div className="mt-6 flex flex-wrap items-center gap-3">

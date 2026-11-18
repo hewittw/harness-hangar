@@ -36,10 +36,10 @@ test.describe.serial("signed in as test user A", () => {
   test("/connect makes a token and shows the claude mcp add command", async () => {
     await page.goto("/connect");
     await expect(page.getByRole("heading", { name: "Connect Claude Code" })).toBeVisible();
-    await page.getByLabel(/Name it after the computer/).fill(tokenLabel);
     // With an existing token the page shows "Connected"; adding a computer opens the same form.
     const addAnother = page.getByRole("button", { name: /Add another computer/ });
     if (await addAnother.isVisible().catch(() => false)) await addAnother.click();
+    await page.getByLabel(/Name it after the computer/).fill(tokenLabel);
     await page.getByRole("button", { name: /Make token and show command/ }).click();
 
     const command = page.locator("pre", { hasText: "claude mcp add" });
