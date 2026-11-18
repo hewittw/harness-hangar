@@ -6,7 +6,7 @@ import { buildInstallTree } from "@/lib/install";
 import { KIND_LABEL, KIND_ORDER } from "@/lib/labels";
 import type { StoredPart } from "@/lib/harness";
 import { CopyButton } from "@/components/copy-button";
-import { deleteHarness } from "../../actions";
+import { deleteHarness } from "@/app/actions";
 
 export default async function HarnessPage({ params }: PageProps<"/library/[id]">) {
   const { id } = await params;

@@ -1,6 +1,6 @@
 import { userDb } from "@/lib/server/user-db";
 import { siteUrl } from "@/lib/site";
-import { revokeToken } from "../actions";
+import { revokeToken } from "@/app/actions";
 import { TokenMaker } from "./token-maker";
 
 export const metadata = { title: "Connect · Hangar" };

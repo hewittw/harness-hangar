@@ -1,4 +1,5 @@
 @import "tailwindcss";
+@import "./design-system.css";
 
 /* Mission Control look, carried over from the proposal site. Custom design is a v2 item. */
 :root {

@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useTransition } from "react";
-import { createToken } from "../actions";
+import { createToken } from "@/app/actions";
 import { CopyButton } from "@/components/copy-button";
 
 export function TokenMaker({ mcpUrl }: { mcpUrl: string }) {

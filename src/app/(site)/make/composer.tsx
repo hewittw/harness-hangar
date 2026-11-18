@@ -4,7 +4,7 @@ import { useMemo, useState, useTransition } from "react";
 import { compose } from "@/lib/compose";
 import type { StoredPart } from "@/lib/harness";
 import { KIND_LABEL, KIND_ORDER } from "@/lib/labels";
-import { composeHarness } from "../actions";
+import { composeHarness } from "@/app/actions";
 
 type H = { id: string; name: string; description: string | null };
 
