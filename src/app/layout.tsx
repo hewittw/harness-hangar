@@ -1,20 +1,14 @@
 import type { Metadata } from "next";
-import Link from "next/link";
-import { Suspense } from "react";
-import { Barlow, Barlow_Condensed } from "next/font/google";
-import { ClerkProvider, Show, SignInButton, UserButton } from "@clerk/nextjs";
+import { Archivo, IBM_Plex_Mono, Instrument_Sans } from "next/font/google";
+import { ClerkProvider } from "@clerk/nextjs";
+import { ThemeScript } from "@/components/theme";
+import { authAppearance } from "@/components/clerk-appearance";
 import "./globals.css";
 
-const barlow = Barlow({
-  variable: "--font-barlow",
-  subsets: ["latin"],
-  weight: ["500", "600", "700"],
-});
-const barlowCondensed = Barlow_Condensed({
-  variable: "--font-barlow-condensed",
-  subsets: ["latin"],
-  weight: ["600", "700"],
-});
+// v3 design system fonts: expanded display (SpaceX), crisp text (Stripe-like), technical mono.
+const archivo = Archivo({ variable: "--font-archivo", subsets: ["latin"], axes: ["wdth"] });
+const instrument = Instrument_Sans({ variable: "--font-instrument", subsets: ["latin"] });
+const plexMono = IBM_Plex_Mono({ variable: "--font-plex-mono", subsets: ["latin"], weight: ["400", "500", "600"] });
 
 export const metadata: Metadata = {
   title: "Hangar: your Claude harnesses, ready to launch",
@@ -22,58 +16,40 @@ export const metadata: Metadata = {
     "Save the Claude Code harness you already have, compose new ones from its parts, and install it into any new folder.",
 };
 
-const NAV = [
-  { href: "/library", label: "Library" },
-  { href: "/make", label: "Make harness" },
-  { href: "/connect", label: "Connect" },
-];
-
 export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
-    <ClerkProvider>
-      <html
-        lang="en"
-        className={`${barlow.variable} ${barlowCondensed.variable}`}
-      >
-        <body className="min-h-screen pt-[60px] pb-[44px]">
-          <header className="fixed inset-x-0 top-0 z-50 flex h-[60px] items-center justify-between gap-6 border-b border-line bg-bg/90 px-5 backdrop-blur sm:px-8">
-            <Link
-              href="/"
-              className="font-dinc text-lg font-bold uppercase tracking-[0.2em] no-underline"
-            >
-              Hangar
-            </Link>
-            <Suspense fallback={<span className="h-7 w-7" />}>
-              <nav className="flex items-center gap-5 sm:gap-7">
-                <Show when="signed-in">
-                  {NAV.map((n) => (
-                    <Link
-                      key={n.href}
-                      href={n.href}
-                      className="font-din text-[11px] font-bold uppercase tracking-[0.18em] text-dim no-underline hover:text-fg"
-                    >
-                      {n.label}
-                    </Link>
-                  ))}
-                  <UserButton />
-                </Show>
-                <Show when="signed-out">
-                  <SignInButton mode="modal">
-                    <button className="btn btn-ghost !py-2">Sign in</button>
-                  </SignInButton>
-                </Show>
-              </nav>
-            </Suspense>
-          </header>
-          <main className="mx-auto max-w-[1080px] px-[6vw] xl:px-0">
-            {children}
-          </main>
-          <footer className="fixed inset-x-0 bottom-0 z-40 flex h-[44px] items-center justify-center gap-2.5 border-t border-line bg-bg/90 px-4 text-center font-mono text-[10px] font-semibold uppercase tracking-[0.18em] text-dim backdrop-blur">
-            <i className="h-1.5 w-1.5 rounded-full bg-ign" aria-hidden />
-            Hangar v1 · your harnesses, ready to launch
-          </footer>
-        </body>
-      </html>
-    </ClerkProvider>
+    <html
+      lang="en"
+      className={`${archivo.variable} ${instrument.variable} ${plexMono.variable}`}
+      suppressHydrationWarning
+    >
+      <head>
+        <ThemeScript />
+      </head>
+      <body className="ds">
+        <ClerkProvider
+          appearance={{
+            // Clerk follows the site's design tokens, so sign-in matches light and dark mode.
+            variables: {
+              colorPrimary: "var(--accent)",
+              colorBackground: "var(--raised)",
+              colorForeground: "var(--ink)",
+              colorMutedForeground: "var(--ink-2)",
+              colorInput: "var(--sunken)",
+              colorInputForeground: "var(--ink)",
+              colorBorder: "var(--hairline-2)",
+              colorNeutral: "var(--ink)",
+              fontFamily: "var(--font-instrument)",
+              borderRadius: "12px",
+            },
+            // Explicit element styles: Clerk can't derive button fills from CSS variables.
+            // Applied here so the header's sign-in/up modals match the dedicated pages.
+            elements: authAppearance.elements,
+          }}
+        >
+          {children}
+        </ClerkProvider>
+      </body>
+    </html>
   );
 }

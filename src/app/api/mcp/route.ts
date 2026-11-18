@@ -40,8 +40,11 @@ const KIND_LABEL: Record<PartKind, string> = {
   hook: "hooks",
 };
 
+const singular = (label: string) => label.replace(/s$/, "");
 const countsLine = (counts: Record<PartKind, number>) =>
-  PART_KINDS.filter((k) => counts[k]).map((k) => `${counts[k]} ${KIND_LABEL[k]}`).join(", ") || "empty";
+  PART_KINDS.filter((k) => counts[k])
+    .map((k) => `${counts[k]} ${counts[k] === 1 ? singular(KIND_LABEL[k]) : KIND_LABEL[k]}`)
+    .join(", ") || "empty";
 
 const harnessUrl = (id: string) => `${siteUrl()}/library/${id}`;
 

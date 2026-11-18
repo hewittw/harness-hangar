@@ -75,3 +75,16 @@ describe("compose", () => {
     }
   });
 });
+
+describe("compose: auto-included count", () => {
+  it("counts a deny rule shared by two sources once", () => {
+    const shared: StoredPart[] = [
+      { id: "s1", harness_id: "A", kind: "permission", name: "Read(./.env)", content: { effect: "deny", rule: "Read(./.env)" } },
+      { id: "s2", harness_id: "B", kind: "permission", name: "Read(./.env)", content: { effect: "deny", rule: "Read(./.env)" } },
+      { id: "r1", harness_id: "A", kind: "rule", name: "r", content: { text: "x" } },
+    ];
+    const r = compose({ sourceParts: shared, selectedPartIds: ["r1"] });
+    expect(r.ok && r.autoIncluded).toHaveLength(1);
+    expect(r.ok && r.parts.filter((p) => p.kind === "permission")).toHaveLength(1);
+  });
+});

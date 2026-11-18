@@ -66,3 +66,10 @@ describe("buildInstallTree", () => {
     expect(t.envVars).toEqual([]);
   });
 });
+
+describe("buildInstallTree summary", () => {
+  it("leaves out kinds with zero parts", () => {
+    const t = buildInstallTree({ name: "x", parts: [{ kind: "rule", name: "r", content: { text: "Be kind." } }] });
+    expect(t.summary).toBe("1 rule");
+  });
+});

@@ -1,0 +1,350 @@
+/*
+ * Hangar design system v3: Stripe x SpaceX x Raycast.
+ * Theme via [data-theme] on <html> (light | dark); palette via [data-palette] (ignition | aurora | mono).
+ * Token names (canvas, ink, hairline...) don't collide with the v1 styles, which keep working until rollout.
+ */
+
+/* ---------- themes ---------- */
+:root,
+[data-theme="light"] {
+  color-scheme: light;
+  --canvas: #ffffff;
+  --canvas-2: #f6f8fc;
+  --raised: #ffffff;
+  --sunken: #f3f5fa;
+  --ink: #0a1226;
+  --ink-2: rgb(10 18 38 / 0.68);
+  --ink-3: rgb(10 18 38 / 0.6);
+  --hairline: rgb(10 18 38 / 0.08);
+  --hairline-2: rgb(10 18 38 / 0.15);
+  --glass: rgb(255 255 255 / 0.7);
+  --glass-strong: rgb(255 255 255 / 0.86);
+  --edge: rgb(10 18 38 / 0.1);
+  --edge-hi: rgb(255 255 255 / 0.9);
+  --shadow-card: 0 1px 1px rgb(10 18 38 / 0.03), 0 8px 24px -8px rgb(10 18 38 / 0.1), 0 30px 60px -30px rgb(50 50 93 / 0.18);
+  --shadow-pop: 0 2px 4px rgb(10 18 38 / 0.04), 0 24px 64px -16px rgb(50 50 93 / 0.28);
+  --code-bg: #0b1020;
+  --code-ink: #e6e9f2;
+  --planet: #f6f8fc;
+  --mesh-opacity: 0.9;
+  --noise-opacity: 0.035;
+  --ok: #067a52;
+  --warn: #8a5a00;
+  --danger: #c4282d;
+}
+
+[data-theme="dark"] {
+  color-scheme: dark;
+  --canvas: #04050a;
+  --canvas-2: #080a12;
+  --raised: #0c0e17;
+  --sunken: #11131d;
+  --ink: #f3f4f8;
+  --ink-2: rgb(243 244 248 / 0.66);
+  --ink-3: rgb(243 244 248 / 0.58);
+  --hairline: rgb(255 255 255 / 0.07);
+  --hairline-2: rgb(255 255 255 / 0.13);
+  --glass: rgb(12 14 23 / 0.6);
+  --glass-strong: rgb(12 14 23 / 0.82);
+  --edge: rgb(255 255 255 / 0.08);
+  --edge-hi: rgb(255 255 255 / 0.22);
+  --shadow-card: 0 0 0 1px rgb(255 255 255 / 0.02), 0 30px 60px -30px rgb(0 0 0 / 0.9);
+  --shadow-pop: 0 0 0 1px rgb(255 255 255 / 0.04), 0 40px 100px -20px rgb(0 0 0 / 0.95);
+  --code-bg: #070912;
+  --code-ink: #e6e9f2;
+  --planet: #04050a;
+  --mesh-opacity: 0.75;
+  --noise-opacity: 0.06;
+  --ok: #3dd68c;
+  --warn: #f5c84b;
+  --danger: #ff6369;
+}
+
+/* ---------- palettes (brand gradient + one accent) ---------- */
+:root,
+[data-palette="ignition"] {
+  --g1: #ffb547;
+  --g2: #ff5b1f;
+  --g3: #ff2d87;
+  --g4: #7a5cff;
+  --g5: #2b6bff;
+  --accent: #ff5b1f;
+}
+[data-palette="aurora"] {
+  --g1: #43e8d8;
+  --g2: #2bb8ff;
+  --g3: #4f6bff;
+  --g4: #9b5cff;
+  --g5: #ff6bd5;
+  --accent: #4f6bff;
+}
+[data-palette="mono"] {
+  --g1: #e9ecf4;
+  --g2: #b9c0d0;
+  --g3: #7d8597;
+  --g4: #4a5163;
+  --g5: #1e2230;
+  --accent: #7d8597;
+}
+[data-theme="light"][data-palette="ignition"],
+[data-palette="ignition"] [data-theme="light"],
+[data-theme="light"]:not([data-palette]) {
+  --accent: #c2410c;
+}
+[data-theme="light"][data-palette="mono"],
+[data-palette="mono"] [data-theme="light"] {
+  --accent: #0a1226;
+}
+[data-theme="dark"][data-palette="mono"],
+[data-palette="mono"] [data-theme="dark"] {
+  --accent: #f3f4f8;
+}
+
+:root,
+[data-theme],
+[data-palette] {
+  --accent-soft: color-mix(in oklab, var(--accent) 13%, transparent);
+  --accent-line: color-mix(in oklab, var(--accent) 50%, transparent);
+  --brand: linear-gradient(100deg, var(--g1) 0%, var(--g2) 28%, var(--g3) 58%, var(--g4) 100%);
+  --brand-soft: linear-gradient(100deg, color-mix(in oklab, var(--g2) 18%, transparent), color-mix(in oklab, var(--g4) 18%, transparent));
+}
+
+:root {
+  --r-sm: 8px;
+  --r-md: 12px;
+  --r-lg: 18px;
+  --r-xl: 26px;
+  --ease: cubic-bezier(0.2, 0.8, 0.2, 1);
+  --dur: 200ms;
+  --noise: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='160' height='160'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='3' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 0.5 0 0 0 0 0.5 0 0 0 0 0.5 0 0 0 1 0'/></filter><rect width='100%' height='100%' filter='url(%23n)'/></svg>");
+}
+
+@custom-variant dark (&:where([data-theme="dark"], [data-theme="dark"] *));
+
+@theme inline {
+  --color-canvas: var(--canvas);
+  --color-canvas-2: var(--canvas-2);
+  --color-raised: var(--raised);
+  --color-sunken: var(--sunken);
+  --color-ink: var(--ink);
+  --color-ink-2: var(--ink-2);
+  --color-ink-3: var(--ink-3);
+  --color-hairline: var(--hairline);
+  --color-hairline-2: var(--hairline-2);
+  --color-accent: var(--accent);
+  --color-accent-soft: var(--accent-soft);
+  --color-ok: var(--ok);
+  --color-danger: var(--danger);
+  --color-g1: var(--g1);
+  --color-g2: var(--g2);
+  --color-g3: var(--g3);
+  --color-g4: var(--g4);
+  --color-g5: var(--g5);
+  --font-display: var(--font-archivo), "Helvetica Neue", Arial, sans-serif;
+  --font-text: var(--font-instrument), "Helvetica Neue", Arial, sans-serif;
+  --font-code: var(--font-plex-mono), ui-monospace, Menlo, monospace;
+  --radius-ds-sm: var(--r-sm);
+  --radius-ds-md: var(--r-md);
+  --radius-ds-lg: var(--r-lg);
+  --radius-ds-xl: var(--r-xl);
+}
+
+@layer components {
+  /* ---------- page ---------- */
+  .ds {
+    background: var(--canvas);
+    color: var(--ink);
+    font-family: var(--font-text);
+    font-size: 17px;
+    line-height: 1.55;
+    letter-spacing: -0.006em;
+    -webkit-font-smoothing: antialiased;
+    transition: background var(--dur) var(--ease), color var(--dur) var(--ease);
+  }
+  .ds ::selection { background: var(--accent); color: #fff; }
+  /* One consistent keyboard focus ring for everything interactive. */
+  .ds :where(a, button, summary, input, select, textarea, [tabindex]):focus-visible {
+    outline: 2px solid var(--accent); outline-offset: 2px; border-radius: 6px;
+  }
+  .ds-noise { position: relative; isolation: isolate; }
+  .ds-noise::after {
+    content: ""; position: absolute; inset: 0; pointer-events: none; z-index: 1;
+    background-image: var(--noise); opacity: var(--noise-opacity); mix-blend-mode: overlay;
+  }
+
+  /* ---------- type ---------- */
+  .ds-display {
+    font-family: var(--font-display); font-stretch: 125%; font-weight: 800; text-transform: uppercase;
+    font-size: clamp(56px, 7.6vw, 124px); line-height: 0.9; letter-spacing: -0.02em;
+  }
+  .ds-h1 { font-family: var(--font-display); font-stretch: 100%; font-weight: 700; font-size: clamp(38px, 4.4vw, 60px); line-height: 1.02; letter-spacing: -0.035em; }
+  .ds-h2 { font-family: var(--font-display); font-stretch: 100%; font-weight: 650; font-size: 32px; line-height: 1.1; letter-spacing: -0.025em; }
+  .ds-h3 { font-family: var(--font-display); font-stretch: 100%; font-weight: 650; font-size: 20px; line-height: 1.25; letter-spacing: -0.012em; }
+  .ds-caps { font-family: var(--font-display); font-stretch: 125%; font-weight: 700; text-transform: uppercase; letter-spacing: 0.04em; }
+  .ds-lead { font-size: 21px; line-height: 1.5; color: var(--ink-2); letter-spacing: -0.012em; }
+  .ds-small { font-size: 14.5px; line-height: 1.5; color: var(--ink-2); }
+  .ds-label {
+    font-family: var(--font-code); font-size: 11px; line-height: 1.2; font-weight: 500;
+    letter-spacing: 0.2em; text-transform: uppercase; color: var(--ink-3);
+  }
+  .ds-mono { font-family: var(--font-code); font-size: 13px; letter-spacing: 0; }
+  .ds-brand-text { background: var(--brand); -webkit-background-clip: text; background-clip: text; color: transparent; }
+  .ds-fade-text {
+    background: linear-gradient(180deg, var(--ink) 35%, color-mix(in oklab, var(--ink) 45%, transparent) 100%);
+    -webkit-background-clip: text; background-clip: text; color: transparent;
+  }
+
+  /* ---------- buttons ---------- */
+  .ds-btn {
+    position: relative; display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+    height: 42px; padding: 0 20px; border-radius: 999px; cursor: pointer; white-space: nowrap; text-decoration: none;
+    font: 600 15px/1 var(--font-text); letter-spacing: -0.005em; border: 1px solid transparent;
+    transition: transform 140ms var(--ease), box-shadow var(--dur) var(--ease), background var(--dur) var(--ease), color var(--dur), border-color var(--dur), filter var(--dur);
+  }
+  .ds-btn:active { transform: scale(0.98); }
+  .ds-btn:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; }
+  .ds-btn:disabled { opacity: 0.45; cursor: not-allowed; transform: none; }
+  .ds-btn-lg { height: 52px; padding: 0 28px; font-size: 16.5px; }
+  .ds-btn-sm { height: 34px; padding: 0 14px; font-size: 13.5px; }
+  /* Solid: white in dark, deep navy in light, with a glossy top edge (Raycast). */
+  .ds-btn-solid {
+    color: var(--canvas); background: linear-gradient(180deg, color-mix(in oklab, var(--ink) 92%, var(--canvas)), var(--ink));
+    box-shadow: inset 0 1px 0 rgb(255 255 255 / 0.25), 0 1px 2px rgb(0 0 0 / 0.2), 0 10px 30px -10px color-mix(in oklab, var(--ink) 50%, transparent);
+  }
+  .ds-btn-solid:hover:not(:disabled) { filter: brightness(1.08); box-shadow: inset 0 1px 0 rgb(255 255 255 / 0.3), 0 14px 40px -12px color-mix(in oklab, var(--ink) 60%, transparent); }
+  /* Brand: the gradient, with a soft glow underneath (Stripe). */
+  /* border: 0 + border-box origin: a transparent border let the oversized gradient wrap and show a sliver at the left edge. */
+  .ds-btn-brand {
+    border: 0; background-origin: border-box; background-repeat: no-repeat;
+    color: #fff; background-image: var(--brand); background-size: 160% 100%; background-position: 0% 50%;
+    box-shadow: inset 0 1px 0 rgb(255 255 255 / 0.35), 0 12px 32px -10px color-mix(in oklab, var(--g3) 70%, transparent);
+    text-shadow: 0 1px 1px rgb(0 0 0 / 0.15);
+  }
+  .ds-btn-brand:hover:not(:disabled) { background-position: 100% 50%; box-shadow: inset 0 1px 0 rgb(255 255 255 / 0.4), 0 18px 44px -12px color-mix(in oklab, var(--g3) 80%, transparent); }
+  .ds-btn-glass {
+    color: var(--ink); background: var(--glass); border-color: var(--edge);
+    -webkit-backdrop-filter: blur(16px) saturate(160%); backdrop-filter: blur(16px) saturate(160%);
+    box-shadow: inset 0 1px 0 var(--edge-hi);
+  }
+  .ds-btn-glass:hover:not(:disabled) { border-color: var(--hairline-2); background: var(--glass-strong); }
+  .ds-btn-ghost { color: var(--ink-2); background: transparent; }
+  .ds-btn-ghost:hover:not(:disabled) { color: var(--ink); background: var(--sunken); }
+  .ds-btn-danger { color: var(--danger); background: transparent; border-color: color-mix(in oklab, var(--danger) 40%, transparent); }
+  .ds-btn-danger:hover:not(:disabled) { background: color-mix(in oklab, var(--danger) 10%, transparent); }
+  .ds-icon-btn {
+    display: inline-grid; place-items: center; width: 36px; height: 36px; border-radius: 999px; cursor: pointer;
+    color: var(--ink-2); background: var(--glass); border: 1px solid var(--edge); box-shadow: inset 0 1px 0 var(--edge-hi);
+    transition: color var(--dur), border-color var(--dur);
+  }
+  .ds-icon-btn:hover { color: var(--ink); border-color: var(--hairline-2); }
+  .ds-icon-btn:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+  /* ---------- surfaces ---------- */
+  .ds-card {
+    position: relative; background: var(--raised); border: 1px solid var(--hairline); border-radius: var(--r-lg);
+    box-shadow: var(--shadow-card);
+  }
+  /* Gradient hairline border + top sheen (Raycast). */
+  .ds-glow {
+    position: relative; border-radius: var(--r-lg); border: 1px solid transparent;
+    background:
+      linear-gradient(var(--raised), var(--raised)) padding-box,
+      linear-gradient(160deg, var(--edge-hi), var(--edge) 35%, var(--edge) 65%, color-mix(in oklab, var(--accent) 45%, var(--edge))) border-box;
+    box-shadow: var(--shadow-card);
+  }
+  .ds-glow::before {
+    content: ""; position: absolute; inset: 0; border-radius: inherit; pointer-events: none;
+    background: radial-gradient(120% 60% at 50% -10%, color-mix(in oklab, var(--ink) 6%, transparent), transparent 60%);
+  }
+  .ds-lift { transition: transform 260ms var(--ease), box-shadow 260ms var(--ease); }
+  .ds-lift:hover { transform: translateY(-3px); box-shadow: var(--shadow-pop); }
+  .ds-glass {
+    background: var(--glass); -webkit-backdrop-filter: blur(20px) saturate(170%); backdrop-filter: blur(20px) saturate(170%);
+  }
+  .ds-divide > * + * { border-top: 1px solid var(--hairline); }
+
+  /* ---------- hero backdrops ---------- */
+  /* Stripe: a skewed band of slowly drifting color blobs. */
+  .ds-mesh { position: absolute; inset: -20% -10% auto -10%; height: 120%; transform: skewY(-9deg); transform-origin: top left; overflow: hidden; opacity: var(--mesh-opacity); z-index: 0; }
+  .ds-mesh > i { position: absolute; border-radius: 50%; filter: blur(70px); animation: ds-drift 22s var(--ease) infinite alternate; }
+  .ds-mesh > i:nth-child(1) { width: max(52vw, 360px); height: max(52vw, 360px); left: -6vw; top: -12vw; background: var(--g1); }
+  .ds-mesh > i:nth-child(2) { width: max(46vw, 320px); height: max(46vw, 320px); left: 22vw; top: -16vw; background: var(--g2); animation-duration: 26s; animation-delay: -6s; }
+  .ds-mesh > i:nth-child(3) { width: max(50vw, 340px); height: max(50vw, 340px); left: 48vw; top: -10vw; background: var(--g3); animation-duration: 30s; animation-delay: -12s; }
+  .ds-mesh > i:nth-child(4) { width: max(44vw, 300px); height: max(44vw, 300px); left: 70vw; top: -18vw; background: var(--g4); animation-duration: 24s; animation-delay: -3s; }
+  .ds-mesh > i:nth-child(5) { width: max(40vw, 280px); height: max(40vw, 280px); left: 34vw; top: 8vw; background: var(--g5); opacity: 0.7; animation-duration: 34s; animation-delay: -9s; }
+  /* Phones: pull the band down and widen it so the color sits behind the headline. */
+  @media (max-width: 640px) {
+    .ds-mesh { inset: 0 -45% auto -45%; height: 75%; }
+  }
+  .ds-mesh-fade { position: absolute; inset: 0; z-index: 0; background: linear-gradient(180deg, transparent 0%, transparent 35%, var(--canvas) 92%); }
+  @keyframes ds-drift {
+    0% { transform: translate3d(0, 0, 0) scale(1); }
+    50% { transform: translate3d(6vw, 3vw, 0) scale(1.12); }
+    100% { transform: translate3d(-4vw, 5vw, 0) scale(0.94); }
+  }
+  /* SpaceX: a planet's glowing limb rising at the bottom of the hero. */
+  .ds-horizon { position: absolute; left: 50%; bottom: calc(-220vw + max(14vw, 120px)); width: 220vw; height: 220vw; transform: translateX(-50%); border-radius: 50%; z-index: 0; background: var(--planet);
+    box-shadow:
+      0 -1px 0 color-mix(in oklab, var(--g1) 90%, white),
+      0 -6px 24px color-mix(in oklab, var(--g2) 70%, transparent),
+      0 -40px 120px color-mix(in oklab, var(--g3) 45%, transparent),
+      0 -120px 260px color-mix(in oklab, var(--g4) 30%, transparent);
+  }
+  .ds-stars { position: absolute; inset: 0; z-index: 0; opacity: 0.55;
+    background-image:
+      radial-gradient(1px 1px at 12% 22%, var(--ink) 50%, transparent 51%), radial-gradient(1px 1px at 28% 64%, var(--ink) 50%, transparent 51%),
+      radial-gradient(1px 1px at 44% 18%, var(--ink) 50%, transparent 51%), radial-gradient(1.5px 1.5px at 63% 41%, var(--ink) 50%, transparent 51%),
+      radial-gradient(1px 1px at 78% 12%, var(--ink) 50%, transparent 51%), radial-gradient(1px 1px at 88% 58%, var(--ink) 50%, transparent 51%),
+      radial-gradient(1px 1px at 6% 76%, var(--ink) 50%, transparent 51%), radial-gradient(1.5px 1.5px at 52% 82%, var(--ink) 50%, transparent 51%),
+      radial-gradient(1px 1px at 93% 30%, var(--ink) 50%, transparent 51%), radial-gradient(1px 1px at 36% 40%, var(--ink) 50%, transparent 51%);
+  }
+  [data-theme="light"] .ds-stars, :root:not([data-theme="dark"]) .ds-stars { opacity: 0; }
+
+  /* ---------- form ---------- */
+  .ds-input {
+    width: 100%; height: 44px; padding: 0 14px; border-radius: var(--r-md); color: var(--ink);
+    background: var(--sunken); border: 1px solid var(--hairline); font: 500 15.5px/1 var(--font-text);
+    transition: border-color var(--dur), box-shadow var(--dur), background var(--dur);
+  }
+  .ds-input::placeholder { color: var(--ink-3); }
+  .ds-input:focus { outline: none; background: var(--raised); border-color: var(--accent); box-shadow: 0 0 0 4px var(--accent-soft); }
+  .ds-field { display: flex; flex-direction: column; gap: 8px; }
+  .ds-field > span { font-size: 13.5px; font-weight: 600; color: var(--ink-2); }
+  .ds-check { width: 17px; height: 17px; accent-color: var(--accent); }
+
+  /* ---------- chips, keys ---------- */
+  .ds-chip {
+    display: inline-flex; align-items: center; gap: 6px; height: 26px; padding: 0 10px; border-radius: 999px; white-space: nowrap;
+    font: 600 12px/1 var(--font-text); color: var(--ink-2); background: var(--sunken); border: 1px solid var(--hairline);
+  }
+  .ds-chip-brand { color: #fff; background: var(--brand); border-color: transparent; }
+  .ds-chip-accent { color: var(--accent); background: var(--accent-soft); border-color: var(--accent-line); }
+  .ds-chip-ok { color: var(--ok); background: color-mix(in oklab, var(--ok) 12%, transparent); border-color: color-mix(in oklab, var(--ok) 35%, transparent); }
+  .ds-chip-danger { color: var(--danger); background: color-mix(in oklab, var(--danger) 11%, transparent); border-color: color-mix(in oklab, var(--danger) 35%, transparent); }
+  .ds-dot { width: 6px; height: 6px; border-radius: 999px; background: currentColor; box-shadow: 0 0 8px currentColor; }
+  .ds-kbd {
+    display: inline-grid; place-items: center; min-width: 22px; height: 22px; padding: 0 6px; border-radius: 6px;
+    font: 500 11.5px/1 var(--font-code); color: var(--ink-2); background: var(--sunken);
+    border: 1px solid var(--hairline-2); box-shadow: inset 0 -1px 0 var(--hairline-2);
+  }
+
+  /* ---------- code / terminal ---------- */
+  .ds-terminal { border-radius: var(--r-lg); background: var(--code-bg); color: var(--code-ink); border: 1px solid rgb(255 255 255 / 0.08); box-shadow: var(--shadow-pop); overflow: hidden; }
+  .ds-terminal-bar { display: flex; align-items: center; gap: 8px; height: 40px; padding: 0 14px; border-bottom: 1px solid rgb(255 255 255 / 0.07); background: rgb(255 255 255 / 0.02); }
+  .ds-terminal-bar i { width: 11px; height: 11px; border-radius: 50%; background: rgb(255 255 255 / 0.14); }
+  .ds-terminal pre { font: 400 13.5px/1.75 var(--font-code); padding: 18px 20px; white-space: pre-wrap; }
+  .ds-code {
+    font: 400 13px/1.7 var(--font-code); color: var(--code-ink); background: var(--code-bg);
+    border: 1px solid rgb(255 255 255 / 0.08); border-radius: var(--r-md); padding: 14px 16px; white-space: pre-wrap; word-break: break-all;
+  }
+
+  /* ---------- telemetry ---------- */
+  .ds-stat { font-family: var(--font-display); font-stretch: 112%; font-weight: 700; font-size: 44px; line-height: 1; letter-spacing: -0.03em; font-variant-numeric: tabular-nums; }
+  .ds-pulse { position: relative; width: 8px; height: 8px; border-radius: 999px; background: var(--accent); box-shadow: 0 0 12px var(--accent); }
+  .ds-pulse::after { content: ""; position: absolute; inset: -5px; border-radius: 999px; border: 1px solid var(--accent); opacity: 0; animation: ds-ping 2.4s var(--ease) infinite; }
+  @keyframes ds-ping { 0% { opacity: 0.7; transform: scale(0.5); } 100% { opacity: 0; transform: scale(1.9); } }
+
+  @media (prefers-reduced-motion: reduce) {
+    .ds *, .ds *::before, .ds *::after { animation: none !important; transition: none !important; }
+  }
+}
