@@ -28,6 +28,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
       </head>
       <body className="ds">
         <ClerkProvider
+          signUpFallbackRedirectUrl="/welcome"
           appearance={{
             // Clerk follows the site's design tokens, so sign-in matches light and dark mode.
             variables: {

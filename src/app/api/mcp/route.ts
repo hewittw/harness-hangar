@@ -15,6 +15,7 @@ import {
   updateHarness,
 } from "@/lib/server/store";
 import { underRateLimit } from "@/lib/server/usage";
+import { ensureSeeded } from "@/lib/server/seed";
 import { rateLimitedBody, secondsUntilReset } from "@/lib/limits";
 
 export const maxDuration = 60;
@@ -92,6 +93,7 @@ const handler = createMcpHandler(
         annotations: { readOnlyHint: true, openWorldHint: false },
       },
       safe(async (ctx) => {
+        await ensureSeeded(userOf(ctx));
         const list = await listHarnesses(userOf(ctx));
         if (!list.length) return text("The library is empty. Use the save-harness prompt in a project folder to save the first harness.");
         return text(
@@ -116,6 +118,7 @@ const handler = createMcpHandler(
         annotations: { readOnlyHint: true, openWorldHint: false },
       },
       safe(async ({ name, view }, ctx) => {
+        await ensureSeeded(userOf(ctx));
         const h = await getHarness(userOf(ctx), { name });
         if (!h) return fail(`No harness named "${name}". Call list_harnesses to see the exact names.`);
         if (view === "parts") {

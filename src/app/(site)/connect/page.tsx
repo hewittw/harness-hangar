@@ -17,8 +17,11 @@ const when = (iso: string) => {
 
 const NEXT_STEPS: { cmd: string; text: ReactNode }[] = [
   { cmd: "/mcp", text: <>Check that <span className="font-semibold text-ink">hangar</span> says connected.</> },
-  { cmd: "/mcp__hangar__save-harness", text: "In a project you like: save its harness to your library." },
-  { cmd: "/mcp__hangar__install-harness", text: "In a new empty folder: install a harness from your library." },
+  {
+    cmd: "/mcp__hangar__install-harness",
+    text: "Try it now: in a new empty folder, pick one of the basics already in your library and install it.",
+  },
+  { cmd: "/mcp__hangar__save-harness", text: "In a project you like: save your own harness to your library." },
 ];
 
 export default async function ConnectPage() {
@@ -64,7 +67,7 @@ export default async function ConnectPage() {
                   </span>
                   <div className="min-w-0 pt-0.5">
                     <p className="text-[15px] text-ink-2">
-                      Run <code className="ds-mono break-all font-medium text-ink">{s.cmd}</code>
+                      Run <code className="ds-mono break-words font-medium text-ink">{s.cmd}</code>
                     </p>
                     <p className="ds-small mt-0.5">{s.text}</p>
                   </div>
