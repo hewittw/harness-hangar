@@ -34,6 +34,18 @@ const countsLine = (counts: Record<PartKind, number>) =>
 
 const harnessUrl = (id: string) => `${siteUrl()}/library/${id}`;
 
+/** Any unexpected error becomes a fixed, model-readable message; details stay in the server log. */
+function safe<A extends unknown[]>(fn: (...args: A) => Promise<ToolResult>): (...args: A) => Promise<ToolResult> {
+  return async (...args) => {
+    try {
+      return await fn(...args);
+    } catch (e) {
+      console.error("mcp tool failed", e);
+      return fail("Hangar hit an internal error and nothing was changed. Try again in a minute; if it keeps failing, tell the user.");
+    }
+  };
+}
+
 const handler = createMcpHandler(
   (server) => {
     server.registerTool(
@@ -47,15 +59,15 @@ const handler = createMcpHandler(
         inputSchema: harnessInput.extend({
           replace: z.boolean().optional().describe("Replace an existing harness with the same name. Only after the user agrees."),
         }),
-        annotations: { readOnlyHint: false, destructiveHint: false, idempotentHint: true, openWorldHint: false },
+        annotations: { readOnlyHint: false, destructiveHint: true, idempotentHint: true, openWorldHint: false },
       },
-      async ({ replace, ...input }, ctx) => {
+      safe(async ({ replace, ...input }, ctx) => {
         const r = await saveHarness(userOf(ctx), input, { replace });
         if (!r.ok) return fail(r.message);
         return text(
           `${r.value.replaced ? "Replaced" : "Saved"} harness "${input.name}" with ${input.parts.length} parts. View it at ${harnessUrl(r.value.id)}`,
         );
-      },
+      }),
     );
 
     server.registerTool(
@@ -65,7 +77,7 @@ const handler = createMcpHandler(
         description: "List the harnesses in the user's Hangar library, newest first, with what each contains.",
         annotations: { readOnlyHint: true, openWorldHint: false },
       },
-      async (ctx) => {
+      safe(async (ctx) => {
         const list = await listHarnesses(userOf(ctx));
         if (!list.length) return text("The library is empty. Use the save-harness prompt in a project folder to save the first harness.");
         return text(
@@ -73,7 +85,7 @@ const handler = createMcpHandler(
             .map((h) => `- ${h.name}${h.source === "compose" ? " (composed)" : ""}: ${h.description ?? "no description"} [${countsLine(h.counts)}]`)
             .join("\n"),
         );
-      },
+      }),
     );
 
     server.registerTool(
@@ -89,7 +101,7 @@ const handler = createMcpHandler(
         }),
         annotations: { readOnlyHint: true, openWorldHint: false },
       },
-      async ({ name, view }, ctx) => {
+      safe(async ({ name, view }, ctx) => {
         const h = await getHarness(userOf(ctx), { name });
         if (!h) return fail(`No harness named "${name}". Call list_harnesses to see the exact names.`);
         if (view === "parts") {
@@ -116,7 +128,7 @@ const handler = createMcpHandler(
             2,
           ),
         );
-      },
+      }),
     );
 
     server.registerTool(
@@ -140,9 +152,9 @@ const handler = createMcpHandler(
           prefer: z.record(z.string(), z.string()).optional().describe("For a conflicting kind:name key, the source harness name whose version to keep."),
           replace: z.boolean().optional(),
         }),
-        annotations: { readOnlyHint: false, destructiveHint: false, idempotentHint: true, openWorldHint: false },
+        annotations: { readOnlyHint: false, destructiveHint: true, idempotentHint: true, openWorldHint: false },
       },
-      async ({ name, description, from, prefer, replace }, ctx) => {
+      safe(async ({ name, description, from, prefer, replace }, ctx) => {
         const userId = userOf(ctx);
         const sources = await Promise.all(from.map((f) => getHarness(userId, { name: f.harness })));
         const missing = from.filter((_, i) => !sources[i]).map((f) => f.harness);
@@ -188,7 +200,7 @@ const handler = createMcpHandler(
         }
         const auto = r.value.autoIncluded ? ` (${r.value.autoIncluded} deny rules were added automatically for safety)` : "";
         return text(`Saved composed harness "${name}" with ${r.value.parts.length} parts${auto}. View it at ${harnessUrl(r.value.id)}`);
-      },
+      }),
     );
 
     server.registerPrompt(
@@ -237,7 +249,7 @@ async function authed(req: Request): Promise<Response> {
           message: `Missing, invalid or revoked Hangar token. Sign in at ${siteUrl()}/connect, create a token, and re-run the "claude mcp add" command it shows.`,
         },
       },
-      { status: 401 },
+      { status: 401, headers: { "WWW-Authenticate": 'Bearer error="invalid_token", error_description="Get a token at /connect"' } },
     );
   }
   (req as Request & { auth?: unknown }).auth = { token, clientId: who.userId, scopes: [], extra: { tokenId: who.tokenId } };

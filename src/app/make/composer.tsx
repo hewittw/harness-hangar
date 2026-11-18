@@ -49,13 +49,18 @@ export function Composer({ harnesses, parts }: { harnesses: H[]; parts: StoredPa
   );
 
   const toggle = (id: string, harnessId: string) => {
-    setSelected((s) => {
-      const n = new Set(s);
-      if (n.has(id)) n.delete(id);
-      else n.add(id);
+    const next = new Set(selected);
+    if (next.has(id)) next.delete(id);
+    else next.add(id);
+    setSelected(next);
+    // A harness stops being a source (and stops contributing deny rules) once none of its parts are picked.
+    const stillUsed = (byHarness.get(harnessId) ?? []).some((p) => next.has(p.id));
+    setUsed((u) => {
+      const n = new Set(u);
+      if (stillUsed) n.add(harnessId);
+      else n.delete(harnessId);
       return n;
     });
-    setUsed((u) => new Set(u).add(harnessId));
   };
 
   const setAll = (harnessId: string, on: boolean) => {

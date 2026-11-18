@@ -4,7 +4,8 @@ import type { PartInput, StoredPart } from "./harness";
  * Merge rules for "Make harness":
  * - Deny permissions from every source harness always come along. Safety only gets stricter.
  * - Everything else comes along only if selected.
- * - The same kind+name selected from two harnesses is a conflict unless the contents are identical
+ * - The same kind+name selected from two harnesses is a conflict unless the contents are identical,
+ *   or one of them is a deny rule (the deny always wins),
  *   (then it is kept once) or the caller resolved it by naming the part to keep.
  */
 
@@ -59,6 +60,12 @@ export function compose(req: ComposeRequest): ComposeResult {
     for (const p of group) distinct.set(JSON.stringify(p.content), p);
     if (distinct.size === 1) {
       chosenParts.push(group[0]);
+      continue;
+    }
+    // A deny rule never loses: if any version is a deny, the deny is kept and there is no choice to make.
+    const deny = group.find(isDeny);
+    if (deny) {
+      chosenParts.push(deny);
       continue;
     }
     const chosenId = req.resolutions?.[key];

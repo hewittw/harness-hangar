@@ -81,3 +81,45 @@ describe("scan: personal details", () => {
     expect(scanParts([rule("Ask before deploying."), skill("# Deploy\nRun the deploy script.")])).toEqual([]);
   });
 });
+
+describe("scan: hardening (verify-team findings)", () => {
+  it("stays fast on huge inputs (no catastrophic backtracking)", () => {
+    const big = "a".repeat(200_000);
+    const mixed = "a.b+c-".repeat(30_000);
+    const t0 = performance.now();
+    scanParts([skill(big), skill(mixed), mcp({ url: big, args: [mixed] })]);
+    expect(performance.now() - t0).toBeLessThan(1500);
+  });
+
+  it("does not let a placeholder hide a literal secret", () => {
+    const f = scanPart(mcp({ env: { API_KEY: "3f9a1c2b4d5e6f708192a3b4c5d6e7f8${UNUSED}" } }));
+    expect(f.map((x) => x.issue)).toContain("literal value where a secret belongs");
+  });
+
+  it("flags secrets passed as CLI flags", () => {
+    expect(scanPart(mcp({ command: "npx", args: ["server", "--api-key", "abcdef0123456789"] }))[0]?.issue).toBe("literal secret passed as a command-line flag");
+    expect(scanPart(mcp({ command: "npx", args: ["--token=abcdef0123456789"] })).map((x) => x.issue)).toContain("literal secret passed as a command-line flag");
+    expect(scanPart(mcp({ command: "npx", args: ["--api-key", "${API_KEY}"] }))).toEqual([]);
+  });
+
+  it("flags token-like URL path segments and nested env", () => {
+    expect(scanPart(mcp({ url: "https://mcp.host/3f9a1c2b4d5e6f708192a3b4c5d6e7f8/sse" }))[0]?.issue).toBe("token-like segment in a URL");
+    expect(scanPart(mcp({ url: "https://mcp.host/${KEY}/sse" }))).toEqual([]);
+    expect(scanPart(mcp({ server: { env: { SECRET: "hunter22hunter22" } } })).length).toBeGreaterThan(0);
+  });
+
+  it("flags generic secret assignments and lowercase bearer", () => {
+    expect(scanPart(rule("set DATABASE_PASSWORD=Tr0ub4dor3xyz in the shell"))[0]?.issue).toBe("secret assignment");
+    expect(scanPart(rule("aws_secret_access_key = wJalrXUtnFEMIK7MDENGbPxRfiCY"))[0]?.issue).toBe("secret assignment");
+    expect(scanPart(rule("authorization: bearer " + fake("", 30))).map((x) => x.issue)).toContain("literal Bearer token");
+    expect(scanPart(rule("set API_KEY=${API_KEY} or API_KEY=<your-key>"))).toEqual([]);
+  });
+
+  it("scans the harness name and description", async () => {
+    const { scanHarnessMeta } = await import("./scan");
+    const f = scanHarnessMeta({ name: "Web", description: `deploy with ${fake("sk-ant-api03-")}, ping alice@gmail.com` });
+    expect(f.map((x) => x.issue).sort()).toEqual(["Anthropic API key", "email address"]);
+    expect(f[0].part).toBe("the harness");
+    expect(scanHarnessMeta({ name: "Web class", description: "For Next.js projects." })).toEqual([]);
+  });
+});

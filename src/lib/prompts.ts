@@ -49,8 +49,13 @@ export function installHarnessPrompt(name?: string): string {
 1. ${name ? `Call get_harness with name "${name}".` : "Call list_harnesses, show the user their harnesses, and ask which one to install. Then call get_harness with that name."}
 2. Ask the user in one sentence what this new folder is for. Wait for the answer.
 3. Check which of the files from get_harness already exist here. Do not overwrite any existing file without asking. For an existing .mcp.json or .claude/settings.json, offer to merge instead of replace.
-4. Write every file exactly as returned, at the path given. Do not change skills, subagents, settings or MCP configs.
-5. Add a short "## This project" section at the top of AGENTS.md, after the title, with what the user said the folder is for.
-6. If get_harness lists env vars, tell the user which ones to set and where they are used. Never invent or ask them to paste secret values into chat.
-7. Tell the user to restart Claude Code in this folder (or run /mcp) so the new MCP servers, permissions and hooks load. Then summarize what was installed.`;
+4. Before writing anything, show the user the parts that can run code or widen access, and get an explicit yes:
+   - every hook command in .claude/settings.json
+   - every "allow" permission rule
+   - every MCP server's command, args and URL in .mcp.json
+   If the user declines any of them, leave those entries out.
+5. Write the approved files exactly as returned, at the paths given. Only write paths inside this folder; refuse any path that is absolute or contains "..". Do not otherwise change skills, subagents, settings or MCP configs.
+6. Add a short "## This project" section at the top of AGENTS.md, after the title, with what the user said the folder is for.
+7. If get_harness lists env vars, tell the user which ones to set and where they are used. Never invent or ask them to paste secret values into chat.
+8. Tell the user to restart Claude Code in this folder (or run /mcp) so the new MCP servers, permissions and hooks load. Then summarize what was installed.`;
 }
