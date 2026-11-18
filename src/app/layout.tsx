@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Barlow, Barlow_Condensed, Geist, Geist_Mono } from "next/font/google";
+import { Archivo, Barlow, Barlow_Condensed, IBM_Plex_Mono, Instrument_Sans } from "next/font/google";
 import { ClerkProvider } from "@clerk/nextjs";
 import { ThemeScript } from "@/components/theme";
 import "./globals.css";
@@ -14,11 +14,10 @@ const barlowCondensed = Barlow_Condensed({
   weight: ["600", "700"],
 });
 
-const geist = Geist({ variable: "--font-geist-sans", subsets: ["latin"] });
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
-  subsets: ["latin"],
-});
+// v3 design system fonts: expanded display (SpaceX), crisp text (Stripe-like), technical mono.
+const archivo = Archivo({ variable: "--font-archivo", subsets: ["latin"], axes: ["wdth"] });
+const instrument = Instrument_Sans({ variable: "--font-instrument", subsets: ["latin"] });
+const plexMono = IBM_Plex_Mono({ variable: "--font-plex-mono", subsets: ["latin"], weight: ["400", "500", "600"] });
 
 export const metadata: Metadata = {
   title: "Hangar: your Claude harnesses, ready to launch",
@@ -30,7 +29,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
     <html
       lang="en"
-      className={`${barlow.variable} ${barlowCondensed.variable} ${geist.variable} ${geistMono.variable}`}
+      className={`${barlow.variable} ${barlowCondensed.variable} ${archivo.variable} ${instrument.variable} ${plexMono.variable}`}
       suppressHydrationWarning
     >
       <head>

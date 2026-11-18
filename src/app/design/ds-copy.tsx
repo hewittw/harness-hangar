@@ -7,7 +7,7 @@ export function DsCopy({ text }: { text: string }) {
   return (
     <button
       type="button"
-      className="ds-btn ds-btn-secondary ds-btn-sm"
+      className="ds-btn ds-btn-glass ds-btn-sm"
       onClick={async () => {
         await navigator.clipboard.writeText(text);
         setDone(true);
