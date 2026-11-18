@@ -94,29 +94,36 @@ export default function AboutPage() {
           they asked for. Each item says what we observed and what we&apos;ll do about it.
         </p>
 
-        <h3 className="ds-h3 !mt-4 text-ink">What we saw in testing</h3>
+        <h3 className="ds-h3 !mt-4 text-ink">What we saw in testing: still open</h3>
         <ul className="flex list-disc flex-col gap-2 pl-5 marker:text-accent">
           <li>
-            <b>The install command&apos;s <code>[name]</code> hint gave no clue what to type</b>, so testers stopped at the prompt.
-            In v1 we renamed it <code>[harness]</code>, added name suggestions and a ready-to-copy command on Connect, but the
-            first step still asks too much.
+            <b>The first install step still asks too much.</b> Testers didn&apos;t know what to type after{" "}
+            <code>/mcp__hangar__install-harness</code>. Suggestions help, but a new person shouldn&apos;t have to choose anything
+            to see it work.
           </li>
           <li>
             <b>People ran commands in the wrong folder</b>: inside an existing project, or in a folder synced to iCloud. Nothing
             told them they were in the wrong place.
           </li>
           <li>
-            <b>Saving missed skills</b> that were installed for the whole computer or came from plugins. v1 now searches those
-            places and asks, but the user can&apos;t see or edit the list before it uploads.
+            <b>Saving can&apos;t be reviewed on the website.</b> Claude now finds more skills and asks about missing ones, but the
+            user can&apos;t see or edit the list of parts before it uploads.
           </li>
           <li>
-            <b>Tokens ended up in screenshots.</b> Copying a secret into a terminal is the riskiest and most confusing step of
-            setup.
+            <b>The setup command shows the full secret token on screen</b>, so testers shared it by accident in screenshots.
+            Copying a secret into a terminal is also the most confusing step of setup.
           </li>
+        </ul>
+
+        <h3 className="ds-h3 !mt-6 text-ink">Already fixed during v1 testing</h3>
+        <ul className="flex list-disc flex-col gap-2 pl-5 marker:text-ok">
           <li>
-            <b>After making a token, the page looked like nothing had happened</b>, and composing from many harnesses was hard to
-            scan. Both were fixed in v1 with a Connected state and a &ldquo;by part type&rdquo; view.
+            The install hint said <code>[name]</code> with no clue what to type. It&apos;s now <code>[harness]</code>, suggests
+            your harness names, and Connect gives a ready-to-copy command for the simplest one.
           </li>
+          <li>Saving missed skills installed for the whole computer or from plugins. It now searches those places and asks.</li>
+          <li>After making a token, the page looked like nothing had happened. It now shows a Connected state.</li>
+          <li>Composing from many harnesses was hard to scan. Make now has a &ldquo;by part type&rdquo; view.</li>
         </ul>
 
         <h3 className="ds-h3 !mt-6 text-ink">Fix first</h3>
