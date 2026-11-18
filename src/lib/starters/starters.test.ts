@@ -83,3 +83,14 @@ describe.each(allHarnesses)("harness %s", (_, harness) => {
     expect(tree.files.some((f) => f.path === ".claude/settings.json")).toBe(true);
   });
 });
+
+describe("preinstalled basics", () => {
+  it("resolves all four basics from the packs", async () => {
+    const { BASICS } = await import("../server/seed-config");
+    const { STARTER_PACKS } = await import("./index");
+    for (const [packId, name] of BASICS) {
+      expect(STARTER_PACKS.find((p) => p.id === packId)?.harnesses.some((h) => h.name === name), `${packId}/${name}`).toBe(true);
+    }
+    expect(BASICS).toHaveLength(4);
+  });
+});
