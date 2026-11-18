@@ -66,14 +66,14 @@ export default function Home() {
           <div className="ds-glass">
             <div className="mx-auto grid max-w-[1240px] grid-cols-2 gap-x-6 px-5 sm:px-8 lg:grid-cols-4 lg:gap-x-0 lg:divide-x lg:divide-hairline">
               {[
-                ["Part types", "06"],
                 ["Commands to install", "01"],
                 ["Secrets stored", "00"],
-                ["Status", "Nominal"],
+                ["Deny rules lost", "00"],
+                ["Price", "$0"],
               ].map(([k, v]) => (
                 <div key={k} className="flex items-baseline justify-between gap-4 py-4 lg:px-6 lg:py-5 lg:first:pl-0 lg:last:pr-0">
                   <span className="ds-label">{k}</span>
-                  <span className={`ds-mono text-[14px] ${v === "Nominal" ? "text-ok" : "text-ink"}`}>{v}</span>
+                  <span className="ds-mono text-[14px] text-ink">{v}</span>
                 </div>
               ))}
             </div>
