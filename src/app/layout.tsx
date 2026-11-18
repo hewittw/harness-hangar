@@ -35,8 +35,26 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
       <head>
         <ThemeScript />
       </head>
-      <body>
-        <ClerkProvider>{children}</ClerkProvider>
+      <body className="ds">
+        <ClerkProvider
+          appearance={{
+            // Clerk follows the site's design tokens, so sign-in matches light and dark mode.
+            variables: {
+              colorPrimary: "var(--accent)",
+              colorBackground: "var(--raised)",
+              colorForeground: "var(--ink)",
+              colorMutedForeground: "var(--ink-2)",
+              colorInput: "var(--sunken)",
+              colorInputForeground: "var(--ink)",
+              colorBorder: "var(--hairline-2)",
+              colorNeutral: "var(--ink)",
+              fontFamily: "var(--font-instrument)",
+              borderRadius: "12px",
+            },
+          }}
+        >
+          {children}
+        </ClerkProvider>
       </body>
     </html>
   );
