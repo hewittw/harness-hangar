@@ -263,11 +263,15 @@
   /* Stripe: a skewed band of slowly drifting color blobs. */
   .ds-mesh { position: absolute; inset: -20% -10% auto -10%; height: 120%; transform: skewY(-9deg); transform-origin: top left; overflow: hidden; opacity: var(--mesh-opacity); z-index: 0; }
   .ds-mesh > i { position: absolute; border-radius: 50%; filter: blur(70px); animation: ds-drift 22s var(--ease) infinite alternate; }
-  .ds-mesh > i:nth-child(1) { width: 52vw; height: 52vw; left: -6vw; top: -12vw; background: var(--g1); }
-  .ds-mesh > i:nth-child(2) { width: 46vw; height: 46vw; left: 22vw; top: -16vw; background: var(--g2); animation-duration: 26s; animation-delay: -6s; }
-  .ds-mesh > i:nth-child(3) { width: 50vw; height: 50vw; left: 48vw; top: -10vw; background: var(--g3); animation-duration: 30s; animation-delay: -12s; }
-  .ds-mesh > i:nth-child(4) { width: 44vw; height: 44vw; left: 70vw; top: -18vw; background: var(--g4); animation-duration: 24s; animation-delay: -3s; }
-  .ds-mesh > i:nth-child(5) { width: 40vw; height: 40vw; left: 34vw; top: 8vw; background: var(--g5); opacity: 0.7; animation-duration: 34s; animation-delay: -9s; }
+  .ds-mesh > i:nth-child(1) { width: max(52vw, 360px); height: max(52vw, 360px); left: -6vw; top: -12vw; background: var(--g1); }
+  .ds-mesh > i:nth-child(2) { width: max(46vw, 320px); height: max(46vw, 320px); left: 22vw; top: -16vw; background: var(--g2); animation-duration: 26s; animation-delay: -6s; }
+  .ds-mesh > i:nth-child(3) { width: max(50vw, 340px); height: max(50vw, 340px); left: 48vw; top: -10vw; background: var(--g3); animation-duration: 30s; animation-delay: -12s; }
+  .ds-mesh > i:nth-child(4) { width: max(44vw, 300px); height: max(44vw, 300px); left: 70vw; top: -18vw; background: var(--g4); animation-duration: 24s; animation-delay: -3s; }
+  .ds-mesh > i:nth-child(5) { width: max(40vw, 280px); height: max(40vw, 280px); left: 34vw; top: 8vw; background: var(--g5); opacity: 0.7; animation-duration: 34s; animation-delay: -9s; }
+  /* Phones: pull the band down and widen it so the color sits behind the headline. */
+  @media (max-width: 640px) {
+    .ds-mesh { inset: 0 -45% auto -45%; height: 75%; }
+  }
   .ds-mesh-fade { position: absolute; inset: 0; z-index: 0; background: linear-gradient(180deg, transparent 0%, transparent 35%, var(--canvas) 92%); }
   @keyframes ds-drift {
     0% { transform: translate3d(0, 0, 0) scale(1); }
@@ -275,7 +279,7 @@
     100% { transform: translate3d(-4vw, 5vw, 0) scale(0.94); }
   }
   /* SpaceX: a planet's glowing limb rising at the bottom of the hero. */
-  .ds-horizon { position: absolute; left: 50%; bottom: -206vw; width: 220vw; height: 220vw; transform: translateX(-50%); border-radius: 50%; z-index: 0; background: var(--planet);
+  .ds-horizon { position: absolute; left: 50%; bottom: calc(-220vw + max(14vw, 120px)); width: 220vw; height: 220vw; transform: translateX(-50%); border-radius: 50%; z-index: 0; background: var(--planet);
     box-shadow:
       0 -1px 0 color-mix(in oklab, var(--g1) 90%, white),
       0 -6px 24px color-mix(in oklab, var(--g2) 70%, transparent),

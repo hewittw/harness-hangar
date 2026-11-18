@@ -7,7 +7,7 @@ import { NavLinks } from "./nav-links";
 
 export default function SiteLayout({ children }: LayoutProps<"/">) {
   return (
-    <div className="ds flex min-h-screen flex-col">
+    <div className="ds flex min-h-screen flex-col overflow-x-clip">
       <header className="ds-glass fixed inset-x-0 top-0 z-50 border-b border-hairline">
         <div className="mx-auto flex h-16 max-w-[1240px] items-center justify-between gap-4 px-5 sm:px-8">
           <Link href="/" aria-label="Hangar home" className="text-ink no-underline">
