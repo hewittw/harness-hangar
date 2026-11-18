@@ -94,3 +94,13 @@ describe("preinstalled basics", () => {
     expect(BASICS).toHaveLength(4);
   });
 });
+
+describe("starter permissions", () => {
+  it("never allow WebFetch to any domain without asking (prompt-injection exfiltration)", async () => {
+    const { STARTER_PACKS } = await import("./index");
+    for (const pack of STARTER_PACKS)
+      for (const h of pack.harnesses)
+        for (const p of h.parts)
+          if (p.kind === "permission" && p.content.effect === "allow") expect(p.content.rule, `${pack.id}/${h.name}`).not.toBe("WebFetch");
+  });
+});

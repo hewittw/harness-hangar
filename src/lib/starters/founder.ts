@@ -1,5 +1,5 @@
 import type { StarterPack } from "./types";
-import { allow, ask, deny, envDenies, mcp, rule, skill } from "./parts";
+import { ask, deny, envDenies, mcp, rule, skill } from "./parts";
 
 export const founderPack: StarterPack = {
   id: "founder",
@@ -141,7 +141,7 @@ export const founderPack: StarterPack = {
         ),
         ...envDenies(),
         deny("Bash(rm -rf *)"),
-        allow("WebFetch"),
+        ask("WebFetch"),
         mcp.linear(),
       ],
     },

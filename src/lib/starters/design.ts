@@ -57,7 +57,7 @@ export const designPack: StarterPack = {
           ],
         ),
         ...envDenies(),
-        allow("WebFetch"),
+        ask("WebFetch"),
         deny("Bash(rm -rf *)"),
       ],
     },

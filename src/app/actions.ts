@@ -20,6 +20,8 @@ export async function createToken(label: string): Promise<{ token?: string; erro
   const clean = label.trim().slice(0, 60) || "Claude Code";
   const { error } = await db.from("api_tokens").insert({ label: clean, token_hash: hashToken(token), token_prefix: tokenPrefix(token) });
   if (error) {
+    // The database enforces the cap too (trigger), in case two requests race past the count above.
+    if (error.message.includes("TOKEN_LIMIT")) return { error: `You have ${MAX_ACTIVE_TOKENS} active tokens. Revoke one first.` };
     console.error("createToken", error);
     return { error: "Could not create a token. Try again." };
   }
