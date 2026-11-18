@@ -1,0 +1,285 @@
+{
+  "name": "Life harness",
+  "description": "A personal daily planner: greeting-triggered check-ins that plan the day from local data, with hooks that keep source data, calendar, messages and money off-limits.",
+  "parts": [
+    {
+      "kind": "rule",
+      "name": "greeting-starts-check-in",
+      "content": {
+        "section": "Check-ins",
+        "text": "\"good morning claude\", \"good afternoon claude\" and \"good evening claude\" start the check-in skill in that mode. A hook makes this deterministic."
+      }
+    },
+    {
+      "kind": "rule",
+      "name": "quick-check-ins",
+      "content": {
+        "section": "Check-ins",
+        "text": "Keep check-ins quick: ask 1-2 questions (only what the data can't tell you), then propose."
+      }
+    },
+    {
+      "kind": "rule",
+      "name": "birthday-gift-scout",
+      "content": {
+        "section": "Check-ins",
+        "text": "When a birthday is within 2 weeks, offer the gift-scout skill."
+      }
+    },
+    {
+      "kind": "rule",
+      "name": "priority-order",
+      "content": {
+        "section": "Planning",
+        "text": "When things conflict, follow the user's priority order: problem sets > job applications > gym > coding practice."
+      }
+    },
+    {
+      "kind": "rule",
+      "name": "morning-three-questions",
+      "content": {
+        "section": "Planning",
+        "text": "Each morning, cover three things: what's due, what to work on first, and today's exercise (rotate between a few kinds)."
+      }
+    },
+    {
+      "kind": "rule",
+      "name": "read-planning-rules-first",
+      "content": {
+        "section": "Planning",
+        "text": "Read the planning rules doc (time blocks, exercise) before proposing a plan."
+      }
+    },
+    {
+      "kind": "rule",
+      "name": "local-time",
+      "content": {
+        "section": "Planning",
+        "text": "All times are in the user's local time zone."
+      }
+    },
+    {
+      "kind": "rule",
+      "name": "source-data-read-only",
+      "content": {
+        "section": "Data",
+        "text": "The user's source data (calendar export, coursework, birthdays, job preferences, profile) is read only. Claude never changes it."
+      }
+    },
+    {
+      "kind": "rule",
+      "name": "feeds-via-fetchers",
+      "content": {
+        "section": "Data",
+        "text": "Fetched snapshots are refreshed only by running the fetch scripts, never edited by hand."
+      }
+    },
+    {
+      "kind": "rule",
+      "name": "one-brief-first",
+      "content": {
+        "section": "Data",
+        "text": "Start from the one-page brief script for a date. Don't open individual feed files unless the brief is missing something."
+      }
+    },
+    {
+      "kind": "rule",
+      "name": "save-plan-as-dated-file",
+      "content": {
+        "section": "Data",
+        "text": "Save each day's plan as a dated JSON file in the shape the plan contract doc describes. The dashboard updates from it on its own."
+      }
+    },
+    {
+      "kind": "rule",
+      "name": "memory-notes",
+      "content": {
+        "section": "Data",
+        "text": "Read the memory notes every check-in and update them afterwards with durable things only (changed preferences, patterns, carry-overs). Keep them under 40 lines and prune stale lines."
+      }
+    },
+    {
+      "kind": "rule",
+      "name": "hard-limits",
+      "content": {
+        "section": "Limits",
+        "text": "Never change source data, write to the user's personal calendar, read or send text messages, or buy anything. Hooks and deny rules enforce this."
+      }
+    },
+    {
+      "kind": "rule",
+      "name": "blocked-means-stop",
+      "content": {
+        "section": "Limits",
+        "text": "If a call is blocked, tell the user what was blocked and suggest the change for them to make. Don't look for another way."
+      }
+    },
+    {
+      "kind": "rule",
+      "name": "never-apply-to-jobs",
+      "content": {
+        "section": "Limits",
+        "text": "Never apply to a job. Link only."
+      }
+    },
+    {
+      "kind": "rule",
+      "name": "never-checkout",
+      "content": {
+        "section": "Limits",
+        "text": "Never add to cart, check out, sign in to a store, or enter payment details. Research and link product pages only; the user does the buying."
+      }
+    },
+    {
+      "kind": "permission",
+      "name": "deny Edit(./data/**)",
+      "content": {
+        "effect": "deny",
+        "rule": "Edit(./data/**)"
+      }
+    },
+    {
+      "kind": "permission",
+      "name": "deny Write(./data/**)",
+      "content": {
+        "effect": "deny",
+        "rule": "Write(./data/**)"
+      }
+    },
+    {
+      "kind": "permission",
+      "name": "deny Edit(./.claude/hooks/**)",
+      "content": {
+        "effect": "deny",
+        "rule": "Edit(./.claude/hooks/**)"
+      }
+    },
+    {
+      "kind": "permission",
+      "name": "deny Write(./.claude/hooks/**)",
+      "content": {
+        "effect": "deny",
+        "rule": "Write(./.claude/hooks/**)"
+      }
+    },
+    {
+      "kind": "hook",
+      "name": "checkin-trigger",
+      "content": {
+        "event": "UserPromptSubmit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node \"$CLAUDE_PROJECT_DIR/.claude/hooks/checkin-trigger.mjs\""
+          }
+        ],
+        "files": [
+          {
+            "path": "checkin-trigger.mjs",
+            "content": "// UserPromptSubmit: \"good morning/afternoon/evening claude\" ALWAYS starts the check-in.\n// The skill's description lets Claude pick it on its own; this hook makes the greeting deterministic.\nimport { readInput } from \"./rules.mjs\";\n\nconst { prompt = \"\" } = await readInput();\nconst m = /^\\s*good\\s+(morning|afternoon|evening)[\\s,]+claude[\\s!.]*$/i.exec(prompt);\nif (m) {\n  const part = m[1].toLowerCase();\n  process.stdout.write(JSON.stringify({\n    hookSpecificOutput: {\n      hookEventName: \"UserPromptSubmit\",\n      additionalContext: `The user greeted you with \"good ${part}\". Invoke the check-in skill now (Skill tool, skill \"check-in\") in ${part} mode.`,\n    },\n  }));\n}\n"
+          },
+          {
+            "path": "rules.mjs",
+            "content": "// The harness's hard rules, enforced by hooks. Claude cannot edit this folder (deny rules).\n\n// Rule 1: never change the user's source data in data/ (calendar export, coursework, budgets, prefs).\n//   A command is blocked if it mentions data/ AND does anything that can write.\nexport const DATA_PATH = /(^|[\\s\"'=/(])(\\.\\/)?data\\//;\nexport const WRITE_VERB = /(^|[^<])>{1,2}|\\btee\\b|\\brm\\b|\\bmv\\b|\\bcp\\b|\\bsed\\s+-i|\\bperl\\s+-[a-z]*i|\\btouch\\b|\\btruncate\\b|\\bchmod\\b|\\bchown\\b|\\bln\\b|\\bunlink\\b|\\bdd\\b|\\bgit\\s+(checkout|restore|rm|mv|reset|stash|clean)\\b|writeFile|\\.write\\(|open\\([^)]*['\"][wa]/;\n\n// Rule 2: never write to the user's personal calendar (Apple Calendar, Google Calendar).\n//   Opening a .ics file on macOS imports it into Calendar, so that's blocked too.\nexport const CALENDAR = /Library\\/Calendars|\\bicalbuddy\\b|open\\s+(-a\\s+)?[\"']?(Calendar|iCal)\\b|\\bopen\\b[^|;&]*\\.ics\\b|webcal:|x-apple-calevent|calendar\\.google\\.com|googleapis\\.com\\/calendar/i;\n\n// Rule 3: never read text-message content (Messages / Contacts databases).\nexport const MESSAGES_DB = /Library\\/Messages|chat\\.db|\\bsqlite3?\\b|AddressBook|\\.abcddb\\b/i;\n\n// Rule 4: never send a text (or any message) to anyone. osascript also covers scripting Calendar.\nexport const SENDING = /\\bosascript\\b|Messages\\.app|open\\s+(-a\\s+)?[\"']?Messages\\b|\\bshortcuts\\s+run\\b|\\b(sms|imessage|facetime|tel|mailto):/i;\n\n// Rule 5: never purchase anything. The gift scout researches and links product pages only.\n//   Blocks checkout/cart/payment URLs and \"buy now\"/\"place order\" automation.\nexport const PURCHASE = /\\/(checkout|cart|basket|purchase|payment|pay|order)s?(\\/|\\?|#|\\b)|add[-_ ]?to[-_ ]?(cart|bag|basket)|buy[-_ ]?now|place[-_ ]?order|paypal\\.com|pay\\.google\\.com|checkout\\.stripe\\.com|\\/gp\\/(buy|cart)/i;\n\nexport async function readInput() {\n  let raw = \"\";\n  for await (const chunk of process.stdin) raw += chunk;\n  return JSON.parse(raw || \"{}\");\n}\n\nexport function block(reason) {\n  process.stderr.write(`BLOCKED by harness rule: ${reason}\\nDo not try another way. Tell the user what was blocked and suggest the change for them to make.\\n`);\n  process.exit(2);\n}\n"
+          }
+        ]
+      }
+    },
+    {
+      "kind": "hook",
+      "name": "guard-bash",
+      "content": {
+        "event": "PreToolUse",
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node \"$CLAUDE_PROJECT_DIR/.claude/hooks/guard-bash.mjs\""
+          }
+        ],
+        "files": [
+          {
+            "path": "guard-bash.mjs",
+            "content": "// PreToolUse(Bash): deny rules can't see inside shell commands, so this hook does.\nimport { CALENDAR, DATA_PATH, MESSAGES_DB, PURCHASE, SENDING, WRITE_VERB, block, readInput } from \"./rules.mjs\";\n\nconst { tool_input = {} } = await readInput();\nconst cmd = String(tool_input.command ?? \"\");\nif (DATA_PATH.test(cmd) && WRITE_VERB.test(cmd)) block(\"data/ is the user's source data. Claude may read it, never change it.\");\nif (CALENDAR.test(cmd)) block(\"the harness never writes to the user's personal calendar. Put the plan in days/ instead.\");\nif (MESSAGES_DB.test(cmd)) block(\"the Messages/Contacts databases are off-limits. The harness never reads text messages.\");\nif (PURCHASE.test(cmd)) block(\"the harness never purchases anything. Suggest the product link; the user buys it.\");\nif (SENDING.test(cmd)) block(\"the harness never sends texts or messages to anyone.\");\n"
+          },
+          {
+            "path": "rules.mjs",
+            "content": "// The harness's hard rules, enforced by hooks. Claude cannot edit this folder (deny rules).\n\n// Rule 1: never change the user's source data in data/ (calendar export, coursework, budgets, prefs).\n//   A command is blocked if it mentions data/ AND does anything that can write.\nexport const DATA_PATH = /(^|[\\s\"'=/(])(\\.\\/)?data\\//;\nexport const WRITE_VERB = /(^|[^<])>{1,2}|\\btee\\b|\\brm\\b|\\bmv\\b|\\bcp\\b|\\bsed\\s+-i|\\bperl\\s+-[a-z]*i|\\btouch\\b|\\btruncate\\b|\\bchmod\\b|\\bchown\\b|\\bln\\b|\\bunlink\\b|\\bdd\\b|\\bgit\\s+(checkout|restore|rm|mv|reset|stash|clean)\\b|writeFile|\\.write\\(|open\\([^)]*['\"][wa]/;\n\n// Rule 2: never write to the user's personal calendar (Apple Calendar, Google Calendar).\n//   Opening a .ics file on macOS imports it into Calendar, so that's blocked too.\nexport const CALENDAR = /Library\\/Calendars|\\bicalbuddy\\b|open\\s+(-a\\s+)?[\"']?(Calendar|iCal)\\b|\\bopen\\b[^|;&]*\\.ics\\b|webcal:|x-apple-calevent|calendar\\.google\\.com|googleapis\\.com\\/calendar/i;\n\n// Rule 3: never read text-message content (Messages / Contacts databases).\nexport const MESSAGES_DB = /Library\\/Messages|chat\\.db|\\bsqlite3?\\b|AddressBook|\\.abcddb\\b/i;\n\n// Rule 4: never send a text (or any message) to anyone. osascript also covers scripting Calendar.\nexport const SENDING = /\\bosascript\\b|Messages\\.app|open\\s+(-a\\s+)?[\"']?Messages\\b|\\bshortcuts\\s+run\\b|\\b(sms|imessage|facetime|tel|mailto):/i;\n\n// Rule 5: never purchase anything. The gift scout researches and links product pages only.\n//   Blocks checkout/cart/payment URLs and \"buy now\"/\"place order\" automation.\nexport const PURCHASE = /\\/(checkout|cart|basket|purchase|payment|pay|order)s?(\\/|\\?|#|\\b)|add[-_ ]?to[-_ ]?(cart|bag|basket)|buy[-_ ]?now|place[-_ ]?order|paypal\\.com|pay\\.google\\.com|checkout\\.stripe\\.com|\\/gp\\/(buy|cart)/i;\n\nexport async function readInput() {\n  let raw = \"\";\n  for await (const chunk of process.stdin) raw += chunk;\n  return JSON.parse(raw || \"{}\");\n}\n\nexport function block(reason) {\n  process.stderr.write(`BLOCKED by harness rule: ${reason}\\nDo not try another way. Tell the user what was blocked and suggest the change for them to make.\\n`);\n  process.exit(2);\n}\n"
+          }
+        ]
+      }
+    },
+    {
+      "kind": "hook",
+      "name": "guard-web",
+      "content": {
+        "event": "PreToolUse",
+        "matcher": "WebFetch",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node \"$CLAUDE_PROJECT_DIR/.claude/hooks/guard-web.mjs\""
+          }
+        ],
+        "files": [
+          {
+            "path": "guard-web.mjs",
+            "content": "// PreToolUse(WebFetch): the gift scout may read product pages, never checkout/cart/payment pages.\nimport { PURCHASE, block, readInput } from \"./rules.mjs\";\n\nconst { tool_input = {} } = await readInput();\nif (PURCHASE.test(String(tool_input.url ?? \"\"))) block(\"the harness never purchases anything, and checkout/cart/payment pages are off-limits.\");\n"
+          },
+          {
+            "path": "rules.mjs",
+            "content": "// The harness's hard rules, enforced by hooks. Claude cannot edit this folder (deny rules).\n\n// Rule 1: never change the user's source data in data/ (calendar export, coursework, budgets, prefs).\n//   A command is blocked if it mentions data/ AND does anything that can write.\nexport const DATA_PATH = /(^|[\\s\"'=/(])(\\.\\/)?data\\//;\nexport const WRITE_VERB = /(^|[^<])>{1,2}|\\btee\\b|\\brm\\b|\\bmv\\b|\\bcp\\b|\\bsed\\s+-i|\\bperl\\s+-[a-z]*i|\\btouch\\b|\\btruncate\\b|\\bchmod\\b|\\bchown\\b|\\bln\\b|\\bunlink\\b|\\bdd\\b|\\bgit\\s+(checkout|restore|rm|mv|reset|stash|clean)\\b|writeFile|\\.write\\(|open\\([^)]*['\"][wa]/;\n\n// Rule 2: never write to the user's personal calendar (Apple Calendar, Google Calendar).\n//   Opening a .ics file on macOS imports it into Calendar, so that's blocked too.\nexport const CALENDAR = /Library\\/Calendars|\\bicalbuddy\\b|open\\s+(-a\\s+)?[\"']?(Calendar|iCal)\\b|\\bopen\\b[^|;&]*\\.ics\\b|webcal:|x-apple-calevent|calendar\\.google\\.com|googleapis\\.com\\/calendar/i;\n\n// Rule 3: never read text-message content (Messages / Contacts databases).\nexport const MESSAGES_DB = /Library\\/Messages|chat\\.db|\\bsqlite3?\\b|AddressBook|\\.abcddb\\b/i;\n\n// Rule 4: never send a text (or any message) to anyone. osascript also covers scripting Calendar.\nexport const SENDING = /\\bosascript\\b|Messages\\.app|open\\s+(-a\\s+)?[\"']?Messages\\b|\\bshortcuts\\s+run\\b|\\b(sms|imessage|facetime|tel|mailto):/i;\n\n// Rule 5: never purchase anything. The gift scout researches and links product pages only.\n//   Blocks checkout/cart/payment URLs and \"buy now\"/\"place order\" automation.\nexport const PURCHASE = /\\/(checkout|cart|basket|purchase|payment|pay|order)s?(\\/|\\?|#|\\b)|add[-_ ]?to[-_ ]?(cart|bag|basket)|buy[-_ ]?now|place[-_ ]?order|paypal\\.com|pay\\.google\\.com|checkout\\.stripe\\.com|\\/gp\\/(buy|cart)/i;\n\nexport async function readInput() {\n  let raw = \"\";\n  for await (const chunk of process.stdin) raw += chunk;\n  return JSON.parse(raw || \"{}\");\n}\n\nexport function block(reason) {\n  process.stderr.write(`BLOCKED by harness rule: ${reason}\\nDo not try another way. Tell the user what was blocked and suggest the change for them to make.\\n`);\n  process.exit(2);\n}\n"
+          }
+        ]
+      }
+    },
+    {
+      "kind": "hook",
+      "name": "guard-write",
+      "content": {
+        "event": "PreToolUse",
+        "matcher": "Write|Edit|MultiEdit|NotebookEdit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node \"$CLAUDE_PROJECT_DIR/.claude/hooks/guard-write.mjs\""
+          }
+        ],
+        "files": [
+          {
+            "path": "guard-write.mjs",
+            "content": "// PreToolUse(Write|Edit|MultiEdit|NotebookEdit): backs up the deny rules on data/, and stops\n// Claude from writing NEW code that would sidestep guard-bash.\nimport { CALENDAR, MESSAGES_DB, PURCHASE, SENDING, block, readInput } from \"./rules.mjs\";\n\nconst { tool_input = {}, cwd = process.cwd() } = await readInput();\nconst path = String(tool_input.file_path ?? tool_input.notebook_path ?? \"\");\nconst root = process.env.CLAUDE_PROJECT_DIR || cwd;\nconst rel = path.startsWith(root) ? path.slice(root.length).replace(/^\\/+/, \"\") : path;\nif (/^(\\.\\/)?data\\//.test(rel)) block(`data/ is the user's source data (${rel}). Claude may read it, never change it.`);\nif (/Library\\/Calendars/.test(path)) block(\"the harness never writes to the user's personal calendar.\");\nif (/\\.md$/i.test(path)) process.exit(0); // prose may mention the rules\nconst text = [tool_input.content, tool_input.new_string, tool_input.new_source,\n  ...(tool_input.edits ?? []).map((e) => e.new_string)].filter(Boolean).join(\"\\n\");\nif (MESSAGES_DB.test(text)) block(`writing code that touches the Messages/Contacts databases (${rel}).`);\nif (SENDING.test(text)) block(`writing code that could send a message (${rel}).`);\nif (PURCHASE.test(text)) block(`checkout/cart/payment links or buying automation (${rel}). Link product pages only.`);\nif (CALENDAR.test(text)) block(`writing code that could write to the personal calendar (${rel}).`);\n"
+          },
+          {
+            "path": "rules.mjs",
+            "content": "// The harness's hard rules, enforced by hooks. Claude cannot edit this folder (deny rules).\n\n// Rule 1: never change the user's source data in data/ (calendar export, coursework, budgets, prefs).\n//   A command is blocked if it mentions data/ AND does anything that can write.\nexport const DATA_PATH = /(^|[\\s\"'=/(])(\\.\\/)?data\\//;\nexport const WRITE_VERB = /(^|[^<])>{1,2}|\\btee\\b|\\brm\\b|\\bmv\\b|\\bcp\\b|\\bsed\\s+-i|\\bperl\\s+-[a-z]*i|\\btouch\\b|\\btruncate\\b|\\bchmod\\b|\\bchown\\b|\\bln\\b|\\bunlink\\b|\\bdd\\b|\\bgit\\s+(checkout|restore|rm|mv|reset|stash|clean)\\b|writeFile|\\.write\\(|open\\([^)]*['\"][wa]/;\n\n// Rule 2: never write to the user's personal calendar (Apple Calendar, Google Calendar).\n//   Opening a .ics file on macOS imports it into Calendar, so that's blocked too.\nexport const CALENDAR = /Library\\/Calendars|\\bicalbuddy\\b|open\\s+(-a\\s+)?[\"']?(Calendar|iCal)\\b|\\bopen\\b[^|;&]*\\.ics\\b|webcal:|x-apple-calevent|calendar\\.google\\.com|googleapis\\.com\\/calendar/i;\n\n// Rule 3: never read text-message content (Messages / Contacts databases).\nexport const MESSAGES_DB = /Library\\/Messages|chat\\.db|\\bsqlite3?\\b|AddressBook|\\.abcddb\\b/i;\n\n// Rule 4: never send a text (or any message) to anyone. osascript also covers scripting Calendar.\nexport const SENDING = /\\bosascript\\b|Messages\\.app|open\\s+(-a\\s+)?[\"']?Messages\\b|\\bshortcuts\\s+run\\b|\\b(sms|imessage|facetime|tel|mailto):/i;\n\n// Rule 5: never purchase anything. The gift scout researches and links product pages only.\n//   Blocks checkout/cart/payment URLs and \"buy now\"/\"place order\" automation.\nexport const PURCHASE = /\\/(checkout|cart|basket|purchase|payment|pay|order)s?(\\/|\\?|#|\\b)|add[-_ ]?to[-_ ]?(cart|bag|basket)|buy[-_ ]?now|place[-_ ]?order|paypal\\.com|pay\\.google\\.com|checkout\\.stripe\\.com|\\/gp\\/(buy|cart)/i;\n\nexport async function readInput() {\n  let raw = \"\";\n  for await (const chunk of process.stdin) raw += chunk;\n  return JSON.parse(raw || \"{}\");\n}\n\nexport function block(reason) {\n  process.stderr.write(`BLOCKED by harness rule: ${reason}\\nDo not try another way. Tell the user what was blocked and suggest the change for them to make.\\n`);\n  process.exit(2);\n}\n"
+          }
+        ]
+      }
+    },
+    {
+      "kind": "skill",
+      "name": "check-in",
+      "content": {
+        "files": [
+          {
+            "path": "SKILL.md",
+            "content": "---\nname: check-in\ndescription: The user's daily check-in. It plans the day, re-plans the afternoon, or recaps the evening and previews tomorrow, then saves the plan so the dashboard updates. Use when the user says \"good morning claude\", \"good afternoon claude\", or \"good evening claude\".\n---\n\n# Check-in\n\nQuick by default: one look at the data, at most 2 questions, one proposal, save on yes.\n\n## 1. Pick the mode\nFrom the greeting only: \"good morning claude\" = **morning**, \"good afternoon claude\" = **afternoon**, \"good evening claude\" = **evening**. The clock doesn't decide the mode.\n\n## 2. Gather\n**Fast path (normal case):** the greeting hook has already put the brief, `docs/planning.md`, and `notes/memory.md` into context. Run **no commands** and go straight to step 3. Speed matters: the user expects a reply within seconds.\n\n**Only if that context is missing** (e.g. the user asked without the greeting):\n1. Refresh the feeds: `node --env-file-if-exists=.env.local scripts/fetch-all.mjs`\n2. Read the brief: `node scripts/brief.mjs`. In evening mode, also run `node scripts/brief.mjs --date <tomorrow>`.\n3. Read `notes/memory.md`, and `docs/planning.md` for the rules.\n\nDon't open individual feed files unless the brief is missing something you need. If the brief's \"Feed health\" lists problems, mention them in one line.\n\n## 3. Ask (1–2 questions, only what the data can't tell you)\nGood questions are things like \"Energy level today?\", \"Did you finish X yesterday?\", or \"Wall ball or weights?\" when both fit. Don't ask what's already in the brief or in memory.\n\n## 4. Propose (short, scannable)\n- **Morning:** a one-line headline, the top 3, a timeline that fits around classes, the exercise and when, the NeetCode pick + why, the top 5 jobs with one line each, and heads-ups (birthdays, deadlines within 48h, feed problems).\n- **Afternoon:** read today's `days/` file, see which tasks are done, and re-plan only the rest of today.\n- **Evening:** recap what got done (task checkboxes + what the user says), what carries over, and a preview of tomorrow (first focus block, exercise, anything due).\n\nThen ask: \"Save this?\"\n\n## 5. Save (only after the user agrees)\n- **Morning / afternoon:** write `days/<today>.json` (shape in `docs/CONTRACT.md`, rules in `docs/planning.md`). On re-plans, keep the existing task ids and `done` states.\n- **Evening:** update today's file (`exercise.done`, any recap `notes`), and write `days/<tomorrow>.json` with `\"draft\": true` so the morning check-in starts from it.\n- **Then update `notes/memory.md`:** only durable things, like a preference that changed, a pattern you noticed (\"skipped gym 3 days running\"), or carry-overs. Keep it under 40 lines and prune stale lines.\n- Finish with one line: \"Plan saved. Your page is updated.\"\n\n## Never\nThese are enforced by hooks: if one blocks you, say what was blocked and stop.\n- Never change `data/`, move a class, write to the personal calendar, send a message, or buy anything.\n- Never apply to a job. Link only.\n"
+          }
+        ]
+      }
+    },
+    {
+      "kind": "skill",
+      "name": "gift-scout",
+      "content": {
+        "files": [
+          {
+            "path": "SKILL.md",
+            "content": "---\nname: gift-scout\ndescription: Researches birthday gift ideas within budget and saves them for the dashboard. It never buys anything. Use when a birthday is within 2 weeks (the check-in brief flags it) or when the user asks for gift ideas for someone.\n---\n\n# Gift Scout\n\n1. Read `gifts/config.json` for the person's budget, interests, avoid list, and past gifts. If `interests` is empty, ask the user 1–2 quick questions (what they're into lately, any hints they've dropped), then save the answers to `gifts/config.json`.\n2. Search the web for 5–8 candidates that fit the interests and fall inside the budget range. Favor specific, thoughtful items over generic ones, and include at least one experience or handmade option.\n3. Verify each one: use WebFetch on the **product page** to confirm the price and that it's in stock. Product pages only, never a cart or checkout (a hook blocks those).\n4. Save the best 3–5 to `gifts/<name>-<year>.json`:\n   ```json\n   { \"person\": \"Sam\", \"birthday\": \"2026-12-01\", \"budget\": [50, 100], \"savedAt\": \"...\",\n     \"ideas\": [ { \"title\": \"...\", \"price\": 68, \"store\": \"Etsy\", \"url\": \"https://...product page...\", \"why\": \"One line tied to their interests\", \"orderBy\": \"2026-11-24\" } ] }\n   ```\n   `orderBy` is the date to order by so it arrives in time (assume 5–7 days shipping unless the page says otherwise).\n5. Tell the user the ideas in 3–5 lines and remind them that they do the buying.\n\n**Never:** add to cart, check out, sign in to a store, or enter payment details. Hooks enforce this, so if one blocks you, say so and stop.\n"
+          }
+        ]
+      }
+    }
+  ]
+}

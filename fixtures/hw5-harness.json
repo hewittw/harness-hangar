@@ -1,0 +1,328 @@
+{
+  "name": "Next.js + Clerk + Supabase web app",
+  "description": "Full-stack web app work: Next.js App Router + Tailwind, Clerk sign-in, Supabase with RLS, free tiers only, accessibility and real-browser verification.",
+  "parts": [
+    {
+      "kind": "rule",
+      "name": "never-spend-money",
+      "content": {
+        "section": "Safety",
+        "text": "Never spend money. Free tiers only: never upgrade a plan, add a payment method, or enable a paid or metered add-on (database branching is often paid). If an action might cost money, stop and ask."
+      }
+    },
+    {
+      "kind": "rule",
+      "name": "keys-in-env-only",
+      "content": {
+        "section": "Safety",
+        "text": "Keys live only in a gitignored env file and the host's env vars. Never read .env files (a deny rule enforces it), never print a key, and never ask the user to paste a secret into chat."
+      }
+    },
+    {
+      "kind": "rule",
+      "name": "no-secret-key-in-app",
+      "content": {
+        "section": "Safety",
+        "text": "The web app never holds the database secret or service-role key. It reaches the database with the publishable key plus the signed-in user's auth token, so row-level security decides access. Only trusted background workers running on the database host may use the secret key."
+      }
+    },
+    {
+      "kind": "rule",
+      "name": "migrations-as-files",
+      "content": {
+        "section": "Safety",
+        "text": "Every schema change is a migration file in the repo, explained in plain words before it is applied. The agent never writes rows directly (raw SQL execution is denied). Destructive DDL needs the user."
+      }
+    },
+    {
+      "kind": "rule",
+      "name": "keep-mcp-locked-down",
+      "content": {
+        "section": "Safety",
+        "text": "Keep the database MCP scoped to one project and as restricted as the user set it. Never loosen its access without asking."
+      }
+    },
+    {
+      "kind": "rule",
+      "name": "ask-before-outward-facing",
+      "content": {
+        "section": "Safety",
+        "text": "Ask before anything outward-facing: creating a repo or hosting project, changing a live URL, or deploying to production."
+      }
+    },
+    {
+      "kind": "rule",
+      "name": "no-personal-browser",
+      "content": {
+        "section": "Safety",
+        "text": "Never drive the user's own browser (no chrome-devtools MCP, no browser extension). Use Playwright's isolated browser."
+      }
+    },
+    {
+      "kind": "rule",
+      "name": "rls-on-every-table",
+      "content": {
+        "section": "Architecture",
+        "text": "Every table holding someone's data has a user_id column that defaults to the auth token's subject, RLS on, separate select/insert/update/delete policies requiring the token subject to equal user_id, and explicit grants to authenticated only. Anonymous users get nothing."
+      }
+    },
+    {
+      "kind": "rule",
+      "name": "rls-is-the-gatekeeper",
+      "content": {
+        "section": "Architecture",
+        "text": "Reads don't filter by user_id on purpose: RLS is the gatekeeper. An automated two-user test proves isolation, and it must be seen failing with RLS broken before it passes."
+      }
+    },
+    {
+      "kind": "rule",
+      "name": "external-apis-server-side",
+      "content": {
+        "section": "Architecture",
+        "text": "Call external APIs only from our own route handlers (auth check, input validation, timeout, cache, trimmed response), never from the browser."
+      }
+    },
+    {
+      "kind": "rule",
+      "name": "server-checks-auth-first",
+      "content": {
+        "section": "Architecture",
+        "text": "Server actions and route handlers check the signed-in user first, before touching data or calling anything else."
+      }
+    },
+    {
+      "kind": "rule",
+      "name": "read-installed-framework-docs",
+      "content": {
+        "section": "Architecture",
+        "text": "Framework versions change fast: read the installed version's docs (for Next.js, node_modules/next/dist/docs) before writing framework code, and heed deprecation notices."
+      }
+    },
+    {
+      "kind": "rule",
+      "name": "no-unneeded-packages",
+      "content": {
+        "section": "Architecture",
+        "text": "Add no packages we don't need (for example, hand-build simple charts in SVG instead of adding a chart library). Push back if one is suggested."
+      }
+    },
+    {
+      "kind": "rule",
+      "name": "static-images-credited",
+      "content": {
+        "section": "Architecture",
+        "text": "Images are static files in the repo, with credits and licenses recorded in a credits doc, along with attributions for API data."
+      }
+    },
+    {
+      "kind": "rule",
+      "name": "design-tokens-in-theme",
+      "content": {
+        "section": "Design and UI",
+        "text": "With Tailwind, design tokens go in @theme and classes go in the markup."
+      }
+    },
+    {
+      "kind": "rule",
+      "name": "accessibility-required",
+      "content": {
+        "section": "Design and UI",
+        "text": "Accessibility is required, not polish: keyboard access with a visible focus ring, a real label on every field, contrast at least 4.5:1 (3:1 for large text and UI boundaries), and real button and link elements only."
+      }
+    },
+    {
+      "kind": "rule",
+      "name": "forms",
+      "content": {
+        "section": "Design and UI",
+        "text": "Forms are one column with a label on every field. Errors sit next to the field and say what to do next. Never lose the user's input."
+      }
+    },
+    {
+      "kind": "rule",
+      "name": "api-states",
+      "content": {
+        "section": "Design and UI",
+        "text": "Every UI that shows external data has designed loading, nothing-found and API-down states."
+      }
+    },
+    {
+      "kind": "rule",
+      "name": "shared-components-all-states",
+      "content": {
+        "section": "Design and UI",
+        "text": "Use shared components everywhere. Every control has rest, hover, focus-visible, pressed, selected and disabled states."
+      }
+    },
+    {
+      "kind": "rule",
+      "name": "every-screen-size",
+      "content": {
+        "section": "Design and UI",
+        "text": "It works at every size, from small phones to 2560px wide."
+      }
+    },
+    {
+      "kind": "rule",
+      "name": "not-the-default-look",
+      "content": {
+        "section": "Design and UI",
+        "text": "Never ship the agent's default look. Keep an avoid list and check it before any visual work. Aim for finished, specific and unmistakably on-theme."
+      }
+    },
+    {
+      "kind": "rule",
+      "name": "screenshots-not-claims",
+      "content": {
+        "section": "Verification",
+        "text": "Verify UI in a real browser before saying it's done (verify-ui skill). A claim isn't evidence; a screenshot is."
+      }
+    },
+    {
+      "kind": "rule",
+      "name": "no-unit-tests-while-prototyping",
+      "content": {
+        "section": "Verification",
+        "text": "No unit tests while prototyping unless asked. Keep the required end-to-end isolation test."
+      }
+    },
+    {
+      "kind": "rule",
+      "name": "security-review-before-merge",
+      "content": {
+        "section": "Verification",
+        "text": "Run /security-review on the branch and handle its findings before merging to main."
+      }
+    },
+    {
+      "kind": "rule",
+      "name": "user-steers",
+      "content": {
+        "section": "Workflow",
+        "text": "The user steers and the agent executes. When unsure about a direction, offer options instead of picking one."
+      }
+    },
+    {
+      "kind": "rule",
+      "name": "small-visible-steps",
+      "content": {
+        "section": "Workflow",
+        "text": "Iterate visibly in small steps, and explain what you did and why so the user can explain it too. A one-shot result is not acceptable."
+      }
+    },
+    {
+      "kind": "rule",
+      "name": "commit-each-step",
+      "content": {
+        "section": "Workflow",
+        "text": "Commit after each meaningful step, naming the change and the reason."
+      }
+    },
+    {
+      "kind": "rule",
+      "name": "design-log",
+      "content": {
+        "section": "Workflow",
+        "text": "Append decisions to a design log as they happen: what we chose, why, what we rejected, and where the user pushed back."
+      }
+    },
+    {
+      "kind": "rule",
+      "name": "handoff-doc",
+      "content": {
+        "section": "Workflow",
+        "text": "Keep a handoff doc with the current status and next steps. When resuming, read it first."
+      }
+    },
+    {
+      "kind": "rule",
+      "name": "one-context-file",
+      "content": {
+        "section": "Workflow",
+        "text": "AGENTS.md is the only context file. Don't add CLAUDE.md files in the project or above it."
+      }
+    },
+    {
+      "kind": "rule",
+      "name": "say-what-setup-added",
+      "content": {
+        "section": "Workflow",
+        "text": "When you set something up through a CLI or MCP, say what it added, file by file."
+      }
+    },
+    {
+      "kind": "rule",
+      "name": "vendor-skills",
+      "content": {
+        "section": "Workflow",
+        "text": "Install the platform vendors' agent skills (for example `npx skills add supabase/agent-skills`) and use them for schema and RLS work."
+      }
+    },
+    {
+      "kind": "permission",
+      "name": "deny mcp__chrome-devtools",
+      "content": {
+        "effect": "deny",
+        "rule": "mcp__chrome-devtools"
+      }
+    },
+    {
+      "kind": "permission",
+      "name": "deny Read(./.env)",
+      "content": {
+        "effect": "deny",
+        "rule": "Read(./.env)"
+      }
+    },
+    {
+      "kind": "permission",
+      "name": "deny Read(./.env.*)",
+      "content": {
+        "effect": "deny",
+        "rule": "Read(./.env.*)"
+      }
+    },
+    {
+      "kind": "permission",
+      "name": "deny mcp__supabase__execute_sql",
+      "content": {
+        "effect": "deny",
+        "rule": "mcp__supabase__execute_sql"
+      }
+    },
+    {
+      "kind": "skill",
+      "name": "verify-ui",
+      "content": {
+        "files": [
+          {
+            "path": "SKILL.md",
+            "content": "---\nname: verify-ui\ndescription: Check pages in a real browser and report what's broken, with screenshots as evidence. Use after creating or changing any page, component, style, or interaction, before saying UI work is done, or when asked to check, test, screenshot, review, or make a contact sheet of the site.\n---\n\n# Verify UI in a Real Browser\n\n1. Make sure the dev server is running (`npm run dev`). Use next-devtools MCP to read compile and runtime errors first.\n2. Run `node scripts/matrix.mjs <url> screenshots/<name>` for EVERY screen size: phones 320/375/390/430 (touch), 844x390 landscape, iPad 768/1024, 1280/1440/1920/2560. View each screenshot. (Single shots: `scripts/shot.mjs`.)\n3. Try every interaction: click, filter, open and close panels/modals, and Tab through every control\n   (a focus ring must be visible). Check hover and pressed states.\n4. Check the console for errors and warnings (Playwright console messages). Never use chrome-devtools MCP or Claude in Chrome.\n5. Save screenshots to `screenshots/<route>-<width>-<state>.png`. For many states, build a\n   contact sheet (one image or page showing every state side by side) so the user can review it at a glance.\n6. Report **evidence, not claims**: list what's broken (overflow, overlap, clipped text, missing\n   states, contrast < 4.5:1, console errors) with the screenshot paths. Don't rate your own work generously.\n7. Mechanics (overlap, overflow, errors) can be judged from the screenshots. Judgment calls (does the style\n   fit, is the main task first) get flagged for the user, not decided.\n"
+          }
+        ]
+      }
+    },
+    {
+      "kind": "skill",
+      "name": "up-to-speed",
+      "content": {
+        "files": [
+          {
+            "path": "SKILL.md",
+            "content": "---\nname: up-to-speed\ndescription: Loads the project handoff (what the assignment or brief asks, every decision so far, what's set up, the hard rules, and what comes next) so a fresh session continues exactly where the last one stopped. Use at the start of a new session, or when the user says \"up to speed\", \"catch up\", \"where are we\", or \"pick up where we left off\".\n---\n\n# Up to speed\n\nYou are continuing a session that already did part of the work. Read `docs/HANDOFF.md` (current status and next steps) and AGENTS.md, then reply with a 5-line status (where we are, what's next) and ask for anything listed under \"Waiting on the user\". Don't redo finished steps.\n\n## Hard rules (in addition to AGENTS.md)\n- **Never spend money.** Free tiers only. No upgrades, no payment methods, no paid or metered add-ons (database branching is usually paid). If an action might cost money, stop and ask.\n- **Never read `.env` or `.env.*`** (a deny rule in `.claude/settings.json`). The user edits the env file. Never ask them to paste secrets into chat.\n- **Keep the database MCP as locked down as the user set it** (read-only or project-scoped). Migrations go like this: write a SQL file in `supabase/migrations/<timestamp>_<name>.sql`, explain it in plain words, apply it the way the user chose, then check the result with the MCP (tables listed, RLS on, policies present). Never loosen the MCP's access without asking.\n- Never use chrome-devtools MCP or the user's own browser. Use the Playwright MCP or scripts (isolated Chromium).\n- The user wants to **understand** each step. Work in small steps, explain what you did and why, and commit after every meaningful step with a descriptive message.\n- When you set something up through a CLI or MCP, say what it added. Afterwards, check `/mcp` and `/context`.\n\n## What the handoff should hold\nKeep `docs/HANDOFF.md` current at the end of each session:\n- **The brief:** requirements, what gets submitted or shipped, and the questions the user must be ready to explain.\n- **Decisions made (and why):** including options the user rejected.\n- **What's set up:** settings, MCP servers, skills, accounts and services (names only, never keys).\n- **Next steps, in order.**\n- **Waiting on the user:** anything only they can do (logins, pasting env vars, running SQL, approvals).\n"
+          }
+        ]
+      }
+    },
+    {
+      "kind": "mcp_server",
+      "name": "supabase",
+      "content": {
+        "config": {
+          "type": "http",
+          "url": "https://mcp.supabase.com/mcp?project_ref=${SUPABASE_PROJECT_REF}&features=docs,database,debugging,development"
+        }
+      }
+    }
+  ]
+}
