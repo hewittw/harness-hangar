@@ -78,14 +78,18 @@ export function buildInstallTree(harness: { name: string; description?: string |
   }
 
   const count = (n: number, w: string) => `${n} ${w}${n === 1 ? "" : "s"}`;
-  const summary = [
-    count(rules.length, "rule"),
-    count(by("skill").length, "skill"),
-    count(by("agent").length, "subagent"),
-    count(servers.length, "MCP server"),
-    count(perms.length, "permission"),
-    count(hooks.length, "hook"),
-  ].join(", ");
+  const summary =
+    [
+      [rules.length, "rule"],
+      [by("skill").length, "skill"],
+      [by("agent").length, "subagent"],
+      [servers.length, "MCP server"],
+      [perms.length, "permission"],
+      [hooks.length, "hook"],
+    ]
+      .filter(([n]) => (n as number) > 0)
+      .map(([n, w]) => count(n as number, w as string))
+      .join(", ") || "empty";
 
   return { files: dedupeByPath(files), envVars: [...envVars].sort(), summary };
 }

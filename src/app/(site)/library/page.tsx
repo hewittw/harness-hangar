@@ -135,8 +135,8 @@ function EmptyState() {
       d: (
         <>
           Open Claude Code in a project whose setup you like and run:
-          <span className="mt-3 flex items-start gap-2">
-            <code className="ds-code min-w-0 flex-1">{SAVE_CMD}</code>
+          <span className="mt-3 flex flex-col items-start gap-2 sm:flex-row">
+            <code className="ds-code w-full min-w-0 flex-1 !break-normal">{SAVE_CMD}</code>
             <CopyButton text={SAVE_CMD} />
           </span>
         </>

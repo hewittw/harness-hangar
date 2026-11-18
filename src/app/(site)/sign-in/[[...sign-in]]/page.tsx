@@ -1,5 +1,5 @@
 import { SignIn } from "@clerk/nextjs";
-import { authAppearance } from "../auth-appearance";
+import { authAppearance } from "@/components/clerk-appearance";
 import { AuthShell } from "../auth-shell";
 
 export const metadata = { title: "Sign in · Hangar" };

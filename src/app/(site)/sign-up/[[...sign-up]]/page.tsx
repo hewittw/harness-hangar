@@ -1,5 +1,5 @@
 import { SignUp } from "@clerk/nextjs";
-import { authAppearance } from "../../sign-in/auth-appearance";
+import { authAppearance } from "@/components/clerk-appearance";
 import { AuthShell } from "../../sign-in/auth-shell";
 
 export const metadata = { title: "Sign up · Hangar" };

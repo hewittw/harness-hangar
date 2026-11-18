@@ -16,7 +16,9 @@ export default function SiteLayout({ children }: LayoutProps<"/">) {
           <div className="flex items-center gap-1.5 sm:gap-2">
             <Suspense fallback={null}>
               <Show when="signed-in">
-                <NavLinks />
+                <div className="hidden sm:block">
+                  <NavLinks />
+                </div>
               </Show>
             </Suspense>
             <ThemeToggle />
@@ -37,6 +39,14 @@ export default function SiteLayout({ children }: LayoutProps<"/">) {
             </Suspense>
           </div>
         </div>
+        {/* Phones: the nav gets its own row so the toggle and account button never get pushed off screen. */}
+        <Suspense fallback={null}>
+          <Show when="signed-in">
+            <div className="flex h-11 items-center justify-center border-t border-hairline sm:hidden">
+              <NavLinks />
+            </div>
+          </Show>
+        </Suspense>
       </header>
 
       <div className="flex-1">{children}</div>
