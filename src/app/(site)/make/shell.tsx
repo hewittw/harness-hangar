@@ -3,7 +3,7 @@ import type { ReactNode } from "react";
 /** Page header for /make, shared with the loading skeleton so the layout doesn't jump. */
 export function MakeShell({ children }: { children: ReactNode }) {
   return (
-    <main className="relative mx-auto max-w-[1240px] px-5 pb-24 pt-28 sm:px-8 sm:pb-28 sm:pt-32">
+    <main className="relative mx-auto max-w-[1240px] px-5 pb-24 pt-32 sm:px-8 sm:pb-28 sm:pt-32">
       <div
         className="pointer-events-none absolute -top-10 right-0 h-72 w-[520px] max-w-full rounded-full opacity-20 blur-[100px]"
         style={{ background: "var(--brand)" }}

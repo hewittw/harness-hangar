@@ -3,7 +3,7 @@ const bar = "animate-pulse rounded-full bg-sunken";
 
 export default function Loading() {
   return (
-    <main className="mx-auto max-w-[1240px] px-5 pb-24 pt-28 sm:px-8 sm:pt-32" aria-busy="true" aria-label="Loading Connect">
+    <main className="mx-auto max-w-[1240px] px-5 pb-24 pt-32 sm:px-8 sm:pt-32" aria-busy="true" aria-label="Loading Connect">
       <div className="flex items-center gap-3">
         <span className="ds-pulse" aria-hidden />
         <span className="ds-label !text-ink-2">Loading</span>

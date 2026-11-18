@@ -14,7 +14,7 @@
   --sunken: #f3f5fa;
   --ink: #0a1226;
   --ink-2: rgb(10 18 38 / 0.68);
-  --ink-3: rgb(10 18 38 / 0.46);
+  --ink-3: rgb(10 18 38 / 0.6);
   --hairline: rgb(10 18 38 / 0.08);
   --hairline-2: rgb(10 18 38 / 0.15);
   --glass: rgb(255 255 255 / 0.7);
@@ -28,9 +28,9 @@
   --planet: #f6f8fc;
   --mesh-opacity: 0.9;
   --noise-opacity: 0.035;
-  --ok: #0e9f6e;
-  --warn: #b7791f;
-  --danger: #e5484d;
+  --ok: #067a52;
+  --warn: #8a5a00;
+  --danger: #c4282d;
 }
 
 [data-theme="dark"] {
@@ -41,7 +41,7 @@
   --sunken: #11131d;
   --ink: #f3f4f8;
   --ink-2: rgb(243 244 248 / 0.66);
-  --ink-3: rgb(243 244 248 / 0.42);
+  --ink-3: rgb(243 244 248 / 0.58);
   --hairline: rgb(255 255 255 / 0.07);
   --hairline-2: rgb(255 255 255 / 0.13);
   --glass: rgb(12 14 23 / 0.6);
@@ -89,7 +89,7 @@
 [data-theme="light"][data-palette="ignition"],
 [data-palette="ignition"] [data-theme="light"],
 [data-theme="light"]:not([data-palette]) {
-  --accent: #e8430f;
+  --accent: #c2410c;
 }
 [data-theme="light"][data-palette="mono"],
 [data-palette="mono"] [data-theme="light"] {
@@ -162,6 +162,10 @@
     transition: background var(--dur) var(--ease), color var(--dur) var(--ease);
   }
   .ds ::selection { background: var(--accent); color: #fff; }
+  /* One consistent keyboard focus ring for everything interactive. */
+  .ds :where(a, button, summary, input, select, textarea, [tabindex]):focus-visible {
+    outline: 2px solid var(--accent); outline-offset: 2px; border-radius: 6px;
+  }
   .ds-noise { position: relative; isolation: isolate; }
   .ds-noise::after {
     content: ""; position: absolute; inset: 0; pointer-events: none; z-index: 1;

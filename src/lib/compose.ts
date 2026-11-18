@@ -90,5 +90,7 @@ export function compose(req: ComposeRequest): ComposeResult {
   chosenParts.sort(
     (a, b) => order.indexOf(a.kind) - order.indexOf(b.kind) || sourceIndex.get(a.id)! - sourceIndex.get(b.id)!,
   );
-  return { ok: true, parts: chosenParts.map(strip), autoIncluded };
+  // Count each auto-included deny rule once, even if several sources had the same one.
+  const kept = new Set(chosenParts.map((p) => p.id));
+  return { ok: true, parts: chosenParts.map(strip), autoIncluded: autoIncluded.filter((id) => kept.has(id)) };
 }

@@ -40,7 +40,7 @@ export default async function HarnessPage({ params }: PageProps<"/library/[id]">
   const isComposed = h.source === "compose";
 
   return (
-    <main className="mx-auto max-w-[1240px] px-5 pb-24 pt-28 sm:px-8 sm:pb-28 sm:pt-32">
+    <main className="mx-auto max-w-[1240px] px-5 pb-24 pt-32 sm:px-8 sm:pb-28 sm:pt-32">
       <Link href="/library" className="ds-label inline-flex items-center gap-2 no-underline transition-colors hover:!text-ink">
         <BackIcon /> Library
       </Link>

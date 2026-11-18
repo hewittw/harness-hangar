@@ -3,7 +3,7 @@ import { Kicker } from "./ui";
 /** Skeleton of the library: header, telemetry strip, card grid. */
 export default function Loading() {
   return (
-    <main className="mx-auto max-w-[1240px] px-5 pb-24 pt-28 sm:px-8 sm:pb-28 sm:pt-32" aria-busy="true" aria-label="Loading your library">
+    <main className="mx-auto max-w-[1240px] px-5 pb-24 pt-32 sm:px-8 sm:pb-28 sm:pt-32" aria-busy="true" aria-label="Loading your library">
       <div className="flex flex-col gap-6 sm:flex-row sm:items-end sm:justify-between">
         <div>
           <Kicker n="01">Library</Kicker>

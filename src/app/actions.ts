@@ -105,7 +105,7 @@ export async function updateHarnessDetails(_prev: HarnessDetailsState, formData:
     if (!r.ok) {
       if (r.message.startsWith("Update rejected: the leak scan")) {
         return {
-          error: "The leak scan flagged the new details, so nothing was changed. Remove these (or use a placeholder like ${VAR_NAME}) and save again:",
+          error: "The leak scan flagged the new details, so nothing was changed. Remove personal details (emails, home-folder paths) and any keys, then save again:",
           // Finding lines read "- description: GitHub token. <fix for the model>"; show where and what, never the value.
           findings: r.message
             .split("\n")

@@ -5,7 +5,7 @@ const bar = "animate-pulse rounded-ds-sm bg-ink/[0.07]";
 /** Skeleton of a harness page: header and launch card, then a rules section. */
 export default function Loading() {
   return (
-    <main className="mx-auto max-w-[1240px] px-5 pb-24 pt-28 sm:px-8 sm:pb-28 sm:pt-32" aria-busy="true" aria-label="Loading harness">
+    <main className="mx-auto max-w-[1240px] px-5 pb-24 pt-32 sm:px-8 sm:pb-28 sm:pt-32" aria-busy="true" aria-label="Loading harness">
       <span className="ds-label inline-flex items-center gap-2">
         <BackIcon /> Library
       </span>

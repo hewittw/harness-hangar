@@ -8,7 +8,7 @@ import { Wordmark } from "@/components/wordmark";
  */
 export function AuthShell({ kicker, children }: { kicker: string; children: ReactNode }) {
   return (
-    <section className="ds-noise relative flex min-h-[100svh] flex-col items-center overflow-hidden px-4 pb-28 pt-28 sm:px-8 sm:pb-36 sm:pt-32">
+    <section className="ds-noise relative flex min-h-[100svh] flex-col items-center overflow-hidden px-4 pb-28 pt-32 sm:px-8 sm:pb-36 sm:pt-32">
       <div className="ds-mesh" aria-hidden>
         <i />
         <i />
