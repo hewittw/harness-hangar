@@ -1,7 +1,19 @@
 import type { ReactNode } from "react";
 
 /** Info-page hero in the Hangar look: drifting mesh and stars, then the page body. */
-export function ProsePage({ kicker, title, lede, children }: { kicker: string; title: ReactNode; lede: ReactNode; children: ReactNode }) {
+export function ProsePage({
+  kicker,
+  title,
+  lede,
+  actions,
+  children,
+}: {
+  kicker: string;
+  title: ReactNode;
+  lede: ReactNode;
+  actions?: ReactNode;
+  children: ReactNode;
+}) {
   return (
     <>
       <section className="ds-noise relative overflow-hidden pt-16">
@@ -21,6 +33,7 @@ export function ProsePage({ kicker, title, lede, children }: { kicker: string; t
           </div>
           <h1 className="ds-display mt-7 max-w-[16ch] !text-[clamp(38px,6.4vw,92px)]">{title}</h1>
           <p className="ds-lead mt-7 max-w-[60ch] !text-[clamp(17px,1.8vw,21px)] !text-ink-2">{lede}</p>
+          {actions && <div className="mt-9 flex flex-wrap items-center gap-3">{actions}</div>}
         </div>
       </section>
       <main className="mx-auto max-w-[1240px] px-5 pb-28 sm:px-8">
@@ -31,9 +44,9 @@ export function ProsePage({ kicker, title, lede, children }: { kicker: string; t
 }
 
 /** A numbered section card for long-form text (About). */
-export function ProseSection({ n, title, children }: { n: string; title: string; children: ReactNode }) {
+export function ProseSection({ n, title, id, children }: { n: string; title: string; id?: string; children: ReactNode }) {
   return (
-    <section className="ds-glow p-6 sm:p-9">
+    <section id={id} className="ds-glow scroll-mt-32 p-6 sm:p-9">
       <div className="flex items-center gap-3">
         <span className="ds-label !text-accent">{n}</span>
         <span className="h-px w-8 bg-hairline-2" />

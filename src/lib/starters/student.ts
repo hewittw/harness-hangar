@@ -102,7 +102,7 @@ export const studentPack: StarterPack = {
         ),
         ...envDenies(),
         allow("WebSearch"),
-        allow("WebFetch"),
+        ask("WebFetch"),
       ],
     },
     {
@@ -143,7 +143,7 @@ export const studentPack: StarterPack = {
           ],
         ),
         ...envDenies(),
-        allow("WebFetch"),
+        ask("WebFetch"),
         ask("Bash"),
       ],
     },
