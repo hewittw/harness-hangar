@@ -28,8 +28,8 @@ const nextSteps = (tryName: string | null): { cmd: string; text: ReactNode }[] =
   {
     cmd: installCmd(tryName),
     text: tryName
-      ? `Try it now: in a new empty folder, install "${tryName}", the simplest harness in your library. Or leave the name off to pick from a list.`
-      : "Try it now: in a new empty folder, run this and pick a harness from your library.",
+      ? `Try it now: in a new, empty folder, install "${tryName}", the simplest harness in your library. Put the name in double quotes, exactly as it appears in your Library. Or leave the name off and Claude lists your harnesses.`
+      : "Try it now: in a new, empty folder, run this and pick a harness from your library. To choose one directly, add its name in double quotes, exactly as it appears in your Library.",
   },
   {
     cmd: "/mcp__hangar__save-harness",
@@ -38,7 +38,9 @@ const nextSteps = (tryName: string | null): { cmd: string; text: ReactNode }[] =
         Save your own: open a terminal in the <span className="font-semibold text-ink">root folder</span> of a project whose
         Claude setup you like (where its <code className="ds-mono text-ink">CLAUDE.md</code> or{" "}
         <code className="ds-mono text-ink">.claude/</code> folder is), start <code className="ds-mono text-ink">claude</code>,
-        then run this. Claude shows exactly what it will upload before saving.
+        then run this. To name it, add the name in double quotes, like{" "}
+        <code className="ds-mono text-ink">/mcp__hangar__save-harness &quot;My web setup&quot;</code>, or leave it off and Claude
+        suggests one. Claude shows exactly what it will upload before saving.
       </>
     ),
   },

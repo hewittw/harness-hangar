@@ -103,7 +103,8 @@ export default function DemoPage() {
       <Stage n={7} title="Optional: save your own" time="3 min">
         <p>
           In a project whose Claude setup you like, run <code>/mcp__hangar__save-harness</code>. Claude collects the setup,
-          distills it into portable rules, and shows exactly what will be uploaded before saving. Refresh your Library to see it.
+          distills it into portable rules, and shows exactly what will be uploaded before saving. To choose the name yourself, add
+          it in double quotes: <code>/mcp__hangar__save-harness &quot;My web setup&quot;</code>. Refresh your Library to see it.
         </p>
         <p>
           To see the leak scan, ask Claude to include a fake key such as <code>sk-ant-test1234567890abcdef</code> in a rule. The
