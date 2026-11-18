@@ -77,25 +77,26 @@ export default function DemoPage() {
         <p>Make a new folder and start Claude Code in it:</p>
         <Cmd text="mkdir -p ~/hangar-demo && cd ~/hangar-demo && claude" />
         <p>
-          Type <code>/mcp</code> and check that <b>hangar</b> is connected. Then run the install command and press Enter. You
-          don&apos;t need to type a name: Claude lists your harnesses and asks which one.
+          Type <code>/mcp</code> and check that <b>hangar</b> is connected. Then paste this command. It installs{" "}
+          <b>Research papers</b>, one of the four basics every account starts with, and the simplest: no MCP servers, hooks or
+          keys to set up.
         </p>
-        <Cmd text="/mcp__hangar__install-harness" />
+        <Cmd text={'/mcp__hangar__install-harness "Research papers"'} />
         <p>
-          Pick <b>Product engineer</b> (or the one you composed). Claude asks what the folder is for, shows the hooks, allow
-          rules and MCP servers it is about to write, and waits for your OK.
+          Claude asks what the folder is for, shows the permission rules it is about to write, and waits for your OK. To pick a
+          different harness, leave the name off and Claude lists your library.
         </p>
-        <Expect>Claude writes the files and tells you which environment variables to set, then to restart.</Expect>
+        <Expect>Claude writes the files, says Research papers is installed, and tells you to restart Claude Code.</Expect>
       </Stage>
 
       <Stage n={6} title="Check that it worked" time="1 min">
         <p>Leave Claude Code and look at what was written:</p>
         <Cmd text="ls -a && cat AGENTS.md" />
         <p>
-          You should see <code>AGENTS.md</code> and <code>CLAUDE.md</code> with the harness&apos;s rules,{" "}
-          <code>.claude/skills/</code>, <code>.claude/settings.json</code> with its permissions and hook, and{" "}
-          <code>.mcp.json</code>. Start <code>claude</code> again and ask it how it should work in this project: it answers from
-          those rules.
+          You should see <code>AGENTS.md</code> with the harness&apos;s 9 rules, <code>CLAUDE.md</code>, three skills in{" "}
+          <code>.claude/skills/</code> (<code>literature-matrix</code>, <code>cite-check</code> and{" "}
+          <code>reverse-outline</code>) and <code>.claude/settings.json</code> with its permissions. Start <code>claude</code>{" "}
+          again and ask it how it should help with a research paper: it answers from those rules and skills.
         </p>
       </Stage>
 
