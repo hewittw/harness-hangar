@@ -6,6 +6,7 @@ import { CopyButton } from "@/components/copy-button";
 import { ArrowIcon, Kicker, PlusIcon, RocketIcon, formatDate, pad2 } from "./ui";
 
 import { starterCards } from "@/lib/starters/cards";
+import { ensureSeeded } from "@/lib/server/seed";
 import { StarterPicker } from "@/components/starters/starter-picker";
 
 export const metadata = { title: "Library · Hangar" };
@@ -14,6 +15,7 @@ const SAVE_CMD = "/mcp__hangar__save-harness";
 
 export default async function LibraryPage() {
   const { db, userId } = await userDb();
+  await ensureSeeded(userId);
   const harnesses = await listHarnesses(userId, db);
 
   // Deny rules per harness, for the card chips and the telemetry row. Best effort: on error the chips are left out.

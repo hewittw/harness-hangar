@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { userDb } from "@/lib/server/user-db";
+import { ensureSeeded } from "@/lib/server/seed";
 import { listHarnesses, loadParts } from "@/lib/server/store";
 import { Composer } from "./composer";
 import { MakeShell } from "./shell";
@@ -8,6 +9,7 @@ export const metadata = { title: "Make harness · Hangar" };
 
 export default async function MakePage() {
   const { db, userId } = await userDb();
+  await ensureSeeded(userId);
   const harnesses = await listHarnesses(userId, db);
   const parts = await loadParts(userId, harnesses.map((h) => h.id), db);
 

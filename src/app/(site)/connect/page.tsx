@@ -17,8 +17,11 @@ const when = (iso: string) => {
 
 const NEXT_STEPS: { cmd: string; text: ReactNode }[] = [
   { cmd: "/mcp", text: <>Check that <span className="font-semibold text-ink">hangar</span> says connected.</> },
-  { cmd: "/mcp__hangar__save-harness", text: "In a project you like: save its harness to your library." },
-  { cmd: "/mcp__hangar__install-harness", text: "In a new empty folder: install a harness from your library." },
+  {
+    cmd: '/mcp__hangar__install-harness "Product engineer"',
+    text: "Try it now: in a new empty folder, install one of the basics already in your library.",
+  },
+  { cmd: "/mcp__hangar__save-harness", text: "In a project you like: save your own harness to your library." },
 ];
 
 export default async function ConnectPage() {
