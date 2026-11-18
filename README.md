@@ -52,6 +52,7 @@ Notes:
 
 - Pages read data with the signed-in user's Clerk session token, so RLS applies.
 - Making and revoking tokens and deleting harnesses also go through the Clerk session token.
+- Signed-in users cannot insert or update harness rows directly. Only the server writes them, after the leak scan.
 - The compose action on `/make` uses the same `store.ts` code as the MCP tool. That code uses the service-role key and filters every query by the Clerk user id.
 - Install writes nothing on the server. `get_harness` returns a file tree and Claude writes the files locally.
 
@@ -67,7 +68,7 @@ Copy `.env.example` to `.env.local` and fill in the values. Variable names:
 - `NEXT_PUBLIC_CLERK_SIGN_IN_URL`
 - `NEXT_PUBLIC_CLERK_SIGN_UP_URL`
 
-Optional: `NEXT_PUBLIC_SITE_URL` sets the origin used in links the MCP tools return. Without it, the app uses Vercel's production URL, or `http://localhost:3000`.
+Optional: `NEXT_PUBLIC_SITE_URL` sets the origin used in links the MCP tools return. Without it, preview deployments use their own branch URL, production uses Vercel's production URL, and local dev uses `http://localhost:$PORT` (default 3000).
 
 Supabase needs Clerk set up as a third-party auth provider so RLS can read the Clerk user id (`auth.jwt() ->> 'sub'`). The schema is in `supabase/migrations/`.
 
@@ -87,9 +88,9 @@ npm run check   # lint, typecheck, tests, build
 
 ## Security
 
-- **Hashed tokens.** Tokens look like `hk_` plus 32 random characters. Hangar stores only a SHA-256 hash and a short prefix for display (`src/lib/tokens.ts`). The full token is shown once. Revoked tokens stop working.
-- **Leak scan before save.** Every upload goes through `src/lib/scan.ts` before it reaches the database. It rejects API keys and tokens (Anthropic, OpenAI, GitHub, AWS, Slack, Stripe/Clerk, Supabase, Google, Hangar), private keys, JWTs, literal Bearer tokens, credentials in URLs, email addresses and home-directory paths. MCP server `env` and `headers` values that look secret must be `${VAR}` placeholders. The error tells Claude what to fix and never repeats the secret. Size limits also apply.
-- **RLS on every table.** `harnesses`, `harness_parts` and `api_tokens` have row level security. Each policy limits rows to the Clerk user id in the JWT.
+- **Hashed tokens.** Tokens look like `hk_` plus 32 random characters. Hangar stores only a SHA-256 hash and a short prefix for display (`src/lib/tokens.ts`). The full token is shown once. Revoked tokens stop working. Each user can have at most 10 active tokens.
+- **Leak scan before save.** Every upload goes through `src/lib/scan.ts` before it reaches the database. It rejects API keys and tokens (Anthropic, OpenAI, GitHub, AWS, Slack, Stripe/Clerk, Supabase, Google, Hangar), private keys, JWTs, literal Bearer tokens, credentials in URLs, email addresses and home-directory paths. The harness name and description are scanned too. In MCP server configs, values under secret-looking keys, `env` and `headers` values that look like tokens, values after secret-looking CLI flags, and token-like URL segments must be `${VAR}` placeholders. The error tells Claude what to fix and never repeats the secret. Size limits also apply.
+- **RLS on every table.** `harnesses`, `harness_parts` and `api_tokens` have row level security. Each policy limits rows to the Clerk user id in the JWT. Signed-in users can read their own harnesses and delete them, but cannot insert or update them; only the server writes harness rows. Token rows can be created and revoked, but a token's hash and owner can't be changed.
 - **Secret key stays on the server.** `SUPABASE_SECRET_KEY` is read only in `src/lib/server/admin.ts`, which imports `server-only`. Code that uses it filters every query by the user id. The `save_harness` database function can only be called by the service role.
 - **`.env` deny rule.** This repo's `.claude/settings.json` denies Claude Code reading or editing `.env` files. The save prompt also tells Claude never to open `.env*` files. Installed harnesses get deny rules only if a source harness had them; Hangar does not add one by default.
 - **Keys live in env vars only.** `.env*` files are git-ignored, except `.env.example`, which has names and no secrets.
