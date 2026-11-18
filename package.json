@@ -12,7 +12,8 @@
     "check": "npm run lint && npm run typecheck && npm run test && npm run build",
     "prepare": "husky",
     "test:e2e": "playwright test",
-    "save:fixture": "node scripts/save-fixture.mjs"
+    "save:fixture": "node scripts/save-fixture.mjs",
+    "e2e:users": "node scripts/e2e-users.mjs"
   },
   "dependencies": {
     "@clerk/nextjs": "^7.10.2",

@@ -78,6 +78,16 @@ npm run dev     # http://localhost:3000
 npm run check   # lint, typecheck, tests, build
 ```
 
+### End-to-end tests
+
+```bash
+npx playwright install chromium   # once
+npm run e2e:users                 # once: creates the Clerk test users, prints their ids
+npm run test:e2e                  # starts `next dev` on port 3100 (E2E_PORT) and runs e2e/
+```
+
+The tests use the keys in `.env.local` and skip themselves when keys are missing. Sign-in tests need Clerk development-instance keys. Global setup signs test user A in once and saves the browser state to `playwright/.clerk/` (git-ignored), and later runs reuse it while the session lasts, because Clerk rate-limits sign-ins. The RLS test writes rows to the real Supabase project and deletes them afterwards, even when it fails. Set `E2E_BASE_URL` to test an app that is already running instead.
+
 ## Quality gates
 
 - **Pre-push hook.** Husky runs `npm run check` before every `git push`. A failing check blocks the push.
