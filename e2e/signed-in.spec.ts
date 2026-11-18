@@ -67,10 +67,21 @@ test.describe.serial("signed in as test user A", () => {
       expect(bPart.error).toBeNull();
 
       // Control: A's token is accepted (otherwise the checks below would pass trivially as anon).
-      const own = await asA.from("harnesses").insert({ name: `${name}-own` }).select("id, user_id").single();
+      // Harness rows are server-written only (migration restrict_direct_writes), so A's own row is made with the
+      // service role too, and A must be able to read it.
+      const own = await svc.from("harnesses").insert({ user_id: userA, name: `${name}-own` }).select("id").single();
       expect(own.error).toBeNull();
-      cleanup.push(own.data!.id);
-      expect(own.data!.user_id).toBe(userA);
+      const ownId = own.data!.id as string;
+      cleanup.push(ownId);
+      const ownRead = await asA.from("harnesses").select("id, user_id").eq("id", ownId);
+      expect(ownRead.error).toBeNull();
+      expect(ownRead.data).toEqual([{ id: ownId, user_id: userA }]);
+
+      // Direct writes are refused even for A's own rows: only the server (which leak-scans) may write harnesses.
+      const ownInsert = await asA.from("harnesses").insert({ name: `${name}-direct` });
+      expect(ownInsert.error?.code).toBe("42501");
+      const ownUpdate = await asA.from("harnesses").update({ description: "direct edit" }).eq("id", ownId);
+      expect(ownUpdate.error?.code).toBe("42501");
 
       // Reads: B's rows are invisible.
       const byId = await asA.from("harnesses").select("id").eq("id", bId);
@@ -98,7 +109,7 @@ test.describe.serial("signed in as test user A", () => {
       // Confirm with the service role: B's row is untouched and nothing forged landed.
       const after = await svc.from("harnesses").select("description").eq("id", bId).single();
       expect(after.data?.description).toBe("e2e: owned by B");
-      const forgedRows = await svc.from("harnesses").select("id").eq("name", `${name}-forged`);
+      const forgedRows = await svc.from("harnesses").select("id").in("name", [`${name}-forged`, `${name}-direct`]);
       expect(forgedRows.data).toEqual([]);
       const forgedParts = await svc.from("harness_parts").select("id").eq("harness_id", bId).eq("name", "e2e-forged");
       expect(forgedParts.data).toEqual([]);
