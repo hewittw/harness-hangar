@@ -1,10 +1,11 @@
 import { expect, test, type Page } from "@playwright/test";
-import { clerk } from "@clerk/testing/playwright";
-import { baseURL, skipNoRls, skipNoSignIn, USER_A_EMAIL, USER_B_EMAIL } from "./env";
-import { clerkUserClient, ensureClerkUser, mcpSession, serviceClient } from "./helpers";
+import { setupClerkTestingToken } from "@clerk/testing/playwright";
+import { AUTH_FILE_A, baseURL, env, skipNoRls, skipNoSignIn } from "./env";
+import { clerkUserClient, mcpSession, serviceClient } from "./helpers";
 
 // One signed-in browser page shared by the tests below, which run in order:
 // the token made on /connect is used by the MCP test.
+// Global setup signed user A in once and saved the browser state; this reuses it (no new sign-in).
 test.describe.serial("signed in as test user A", () => {
   test.skip(!!skipNoSignIn, skipNoSignIn);
 
@@ -14,17 +15,22 @@ test.describe.serial("signed in as test user A", () => {
   let token: string | undefined;
 
   test.beforeAll(async ({ browser }) => {
-    await ensureClerkUser(USER_A_EMAIL);
-    page = await browser.newPage({ baseURL });
+    userA = env("E2E_USER_A_ID");
+    const context = await browser.newContext({ baseURL, storageState: AUTH_FILE_A });
+    await setupClerkTestingToken({ context });
+    page = await context.newPage();
     await page.goto("/");
-    await clerk.signIn({ page, emailAddress: USER_A_EMAIL });
-    userA = await page.evaluate(() => window.Clerk.user!.id);
+    await page.waitForFunction(() => window.Clerk?.loaded && !!window.Clerk.user);
+    expect(await page.evaluate(() => window.Clerk.user!.id)).toBe(userA);
   });
 
   test.afterAll(async () => {
-    await page?.close();
-    // Remove the token this run created, when we have the key to do so.
-    if (!skipNoRls && userA) await serviceClient().from("api_tokens").delete().eq("user_id", userA).eq("label", tokenLabel);
+    await page?.context().close();
+    // Remove the tokens e2e runs made for user A (this run's, and any a crashed run left behind).
+    if (!skipNoRls && userA) {
+      const { error } = await serviceClient().from("api_tokens").delete().eq("user_id", userA).like("label", "e2e %");
+      if (error) throw new Error(`token cleanup failed: ${error.message}`);
+    }
   });
 
   test("/connect makes a token and shows the claude mcp add command", async () => {
@@ -34,7 +40,10 @@ test.describe.serial("signed in as test user A", () => {
     await page.getByRole("button", { name: /Make token and show command/ }).click();
 
     const command = page.locator("pre", { hasText: "claude mcp add" });
-    await expect(command).toBeVisible();
+    // If the server action fails, the form shows an error instead; fail with that message.
+    const formError = page.getByText(/Could not create a token|active tokens\. Revoke one|Something went wrong/);
+    await expect(command.or(formError)).toBeVisible();
+    if (await formError.isVisible()) throw new Error(`/connect showed an error: ${await formError.innerText()}`);
     const text = await command.innerText();
     expect(text).toContain("--transport http");
     expect(text).toContain("/api/mcp");
@@ -45,7 +54,7 @@ test.describe.serial("signed in as test user A", () => {
   test("RLS: user B's harnesses are invisible to A and A cannot write as B", async () => {
     test.skip(!!skipNoRls, skipNoRls);
 
-    const userB = await ensureClerkUser(USER_B_EMAIL);
+    const userB = env("E2E_USER_B_ID");
     expect(userB).not.toBe(userA);
     const svc = serviceClient();
     // A's Clerk session token, fetched fresh from the signed-in page for each request (it expires in 60s).
@@ -114,7 +123,13 @@ test.describe.serial("signed in as test user A", () => {
       const forgedParts = await svc.from("harness_parts").select("id").eq("harness_id", bId).eq("name", "e2e-forged");
       expect(forgedParts.data).toEqual([]);
     } finally {
-      if (cleanup.length) await svc.from("harnesses").delete().in("id", cleanup); // parts cascade
+      // Remove every row this test may have made, including any a broken policy let through. Parts cascade.
+      const delIds = cleanup.length ? await svc.from("harnesses").delete().in("id", cleanup) : { error: null };
+      const delNames = await svc.from("harnesses").delete().in("user_id", [userA, userB]).like("name", `${name}%`);
+      const left = await svc.from("harnesses").select("id").in("user_id", [userA, userB]).like("name", `${name}%`);
+      const problem = delIds.error?.message ?? delNames.error?.message ?? left.error?.message ?? (left.data?.length ? `${left.data.length} rows left` : undefined);
+      // Report a cleanup failure without hiding an earlier assertion failure.
+      if (problem) expect.soft(problem, "RLS test cleanup failed").toBeUndefined();
     }
   });
 

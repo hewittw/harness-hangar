@@ -5,6 +5,10 @@ import { hashToken, looksLikeToken } from "../tokens";
 import { LIMITS, partInput, type HarnessInput, type PartInput, type PartKind, type StoredPart } from "../harness";
 import { formatFindings, scanHarnessMeta, scanParts } from "../scan";
 import { compose, keyOf } from "../compose";
+import { checkStorageBudget, saveLimitMessage, secondsUntilReset } from "../limits";
+import { siteUrl } from "../site";
+import { underRateLimit, userStorageBytes } from "./usage";
+import { harnessNameTaken, harnessNotFound, planUpdate, type UpdateHarnessInput } from "../manage";
 
 /**
  * Data access for trusted server code (MCP route, server actions).
@@ -82,6 +86,9 @@ export async function saveHarness(
   const findings = [...scanHarnessMeta(input), ...scanParts(input.parts)];
   if (findings.length) return { ok: false, message: formatFindings(findings) };
 
+  // Counted only once the upload is valid, so fixing scan findings doesn't burn the quota.
+  if (!(await underRateLimit(userId, "save"))) return { ok: false, message: saveLimitMessage(secondsUntilReset("save")) };
+
   const existing = await findHarnessId(userId, input.name);
   if (!existing) {
     const { count, error: countError } = await admin()
@@ -92,10 +99,19 @@ export async function saveHarness(
     if ((count ?? 0) >= MAX_HARNESSES_PER_USER) {
       return {
         ok: false,
-        message: `The library is full (${MAX_HARNESSES_PER_USER} harnesses). Ask the user to delete one on the website, or replace an existing harness. Nothing was saved.`,
+        message: `The library is full (${MAX_HARNESSES_PER_USER} harnesses). Ask the user which one to delete (delete_harness, only after they say yes) or replace an existing harness. Nothing was saved.`,
       };
     }
   }
+  // Fails closed: if usage can't be measured, nothing is written.
+  let usedBytes = 0;
+  try {
+    usedBytes = await userStorageBytes(userId, existing);
+  } catch (e) {
+    fail("user storage bytes", e);
+  }
+  const budget = checkStorageBudget({ usedBytes, incomingBytes: bytes, libraryUrl: `${siteUrl()}/library` });
+  if (!budget.ok) return budget;
   const { data, error } = await admin().rpc("save_harness", {
     p_user_id: userId,
     p_name: input.name,
@@ -176,9 +192,34 @@ export async function loadParts(userId: string, harnessIds: string[], db: Supaba
   );
 }
 
-export async function deleteHarness(userId: string, id: string): Promise<boolean> {
-  const { error, count } = await admin().from("harnesses").delete({ count: "exact" }).eq("user_id", userId).eq("id", id);
-  return !error && (count ?? 0) > 0;
+/** Delete one of the user's harnesses by name. Its parts go with it (harness_parts FK is ON DELETE CASCADE). */
+export async function deleteHarness(userId: string, name: string): Promise<Result<{ id: string }>> {
+  const { data, error } = await admin().from("harnesses").delete().eq("user_id", userId).eq("name", name).select("id");
+  if (error) fail("delete harness", error);
+  if (!data?.length) return { ok: false, message: harnessNotFound(name) };
+  return { ok: true, value: { id: data[0].id } };
+}
+
+/** Rename a harness and/or change its description. The (user_id, name) unique constraint enforces unique names. */
+export async function updateHarness(
+  userId: string,
+  input: UpdateHarnessInput,
+): Promise<Result<{ id: string; name: string; description: string | null }>> {
+  const plan = planUpdate(input);
+  if (!plan.ok) return plan;
+  const { data, error } = await admin()
+    .from("harnesses")
+    .update(plan.changes)
+    .eq("user_id", userId)
+    .eq("name", input.name)
+    .select("id, name, description")
+    .maybeSingle();
+  if (error) {
+    if (error.code === "23505" && plan.changes.name) return { ok: false, message: harnessNameTaken(plan.changes.name) };
+    fail("update harness", error);
+  }
+  if (!data) return { ok: false, message: harnessNotFound(input.name) };
+  return { ok: true, value: data };
 }
 
 /** Compose by ids (website) and save the result. */

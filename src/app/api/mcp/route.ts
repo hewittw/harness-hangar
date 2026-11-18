@@ -4,7 +4,18 @@ import { harnessInput, PART_KINDS, type PartKind } from "@/lib/harness";
 import { buildInstallTree } from "@/lib/install";
 import { installHarnessPrompt, saveHarnessPrompt } from "@/lib/prompts";
 import { siteUrl } from "@/lib/site";
-import { authenticateToken, composeAndSave, getHarness, listHarnesses, saveHarness } from "@/lib/server/store";
+import { deleteHarnessInput, updateHarnessInput } from "@/lib/manage";
+import {
+  authenticateToken,
+  composeAndSave,
+  deleteHarness,
+  getHarness,
+  listHarnesses,
+  saveHarness,
+  updateHarness,
+} from "@/lib/server/store";
+import { underRateLimit } from "@/lib/server/usage";
+import { rateLimitedBody, secondsUntilReset } from "@/lib/limits";
 
 export const maxDuration = 60;
 
@@ -203,6 +214,45 @@ const handler = createMcpHandler(
       }),
     );
 
+    server.registerTool(
+      "update_harness",
+      {
+        title: "Update harness",
+        description:
+          "Rename a harness and/or change its one-line description in the user's Hangar library. Pass new_name, description, or both. " +
+          "Names must be unique in the user's library. Parts are not changed; to change parts, use save_harness with replace: true.",
+        inputSchema: updateHarnessInput,
+        annotations: { readOnlyHint: false, destructiveHint: false, idempotentHint: true, openWorldHint: false },
+      },
+      safe(async (input, ctx) => {
+        const r = await updateHarness(userOf(ctx), input);
+        if (!r.ok) return fail(r.message);
+        const changed = [
+          r.value.name !== input.name ? `renamed "${input.name}" to "${r.value.name}"` : null,
+          input.description !== undefined ? (r.value.description ? "updated the description" : "cleared the description") : null,
+        ].filter(Boolean);
+        return text(`Updated harness: ${changed.join(" and ")}. View it at ${harnessUrl(r.value.id)}`);
+      }),
+    );
+
+    server.registerTool(
+      "delete_harness",
+      {
+        title: "Delete harness",
+        description:
+          "Permanently delete one harness and all its parts from the user's Hangar library. This cannot be undone. " +
+          "Before calling, tell the user exactly which harness will be deleted and get their explicit yes in this conversation; " +
+          "never delete on your own initiative (for example to make room). Harnesses composed from it keep their own copies of its parts.",
+        inputSchema: deleteHarnessInput,
+        annotations: { readOnlyHint: false, destructiveHint: true, idempotentHint: true, openWorldHint: false },
+      },
+      safe(async ({ name }, ctx) => {
+        const r = await deleteHarness(userOf(ctx), name);
+        if (!r.ok) return fail(r.message);
+        return text(`Deleted harness "${name}" and all its parts.`);
+      }),
+    );
+
     server.registerPrompt(
       "save-harness",
       {
@@ -252,8 +302,26 @@ async function authed(req: Request): Promise<Response> {
       { status: 401, headers: { "WWW-Authenticate": 'Bearer error="invalid_token", error_description="Get a token at /connect"' } },
     );
   }
+  if (!(await underRateLimit(who.tokenId, "mcp_request"))) {
+    const retryAfter = secondsUntilReset("mcp_request");
+    return Response.json(rateLimitedBody(await jsonRpcId(req), retryAfter), {
+      status: 429,
+      headers: { "Retry-After": String(retryAfter) },
+    });
+  }
   (req as Request & { auth?: unknown }).auth = { token, clientId: who.userId, scopes: [], extra: { tokenId: who.tokenId } };
   return handler(req);
+}
+
+/** The JSON-RPC id of a single POSTed request, so the 429 answers the call it refuses. Null otherwise. */
+async function jsonRpcId(req: Request): Promise<string | number | null> {
+  if (req.method !== "POST") return null;
+  try {
+    const id = ((await req.json()) as { id?: unknown })?.id;
+    return typeof id === "string" || typeof id === "number" ? id : null;
+  } catch {
+    return null;
+  }
 }
 
 export { authed as GET, authed as POST, authed as DELETE };

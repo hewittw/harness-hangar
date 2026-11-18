@@ -20,6 +20,7 @@ const SUPABASE_KEYS = ["NEXT_PUBLIC_SUPABASE_URL", "NEXT_PUBLIC_SUPABASE_PUBLISH
 
 /** Test an already-running app (local or preview) instead of starting one. */
 export const externalBaseUrl = val("E2E_BASE_URL")?.replace(/\/$/, "");
+// Not 3000, so the suite never reuses (or collides with) a dev server you already have running.
 export const port = Number(val("E2E_PORT") ?? 3100);
 export const baseURL = externalBaseUrl ?? `http://localhost:${port}`;
 
@@ -61,6 +62,9 @@ export const needsClerkSetup = !skipNoSignIn;
 // Clerk test emails (+clerk_test) sign in with code 424242 and never receive real mail.
 export const USER_A_EMAIL = val("E2E_CLERK_USER_A_EMAIL") ?? "hangar-a+clerk_test@example.com";
 export const USER_B_EMAIL = val("E2E_CLERK_USER_B_EMAIL") ?? "hangar-b+clerk_test@example.com";
+
+/** Browser state of user A, signed in once by global setup (git-ignored). */
+export const AUTH_FILE_A = "playwright/.clerk/user-a.json";
 
 export const env = (name: string): string => {
   const v = val(name);

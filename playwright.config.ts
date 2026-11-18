@@ -16,7 +16,10 @@ export default defineConfig({
     ? {
         command: `npm run dev -- --port ${port}`,
         url: baseURL,
-        reuseExistingServer: !process.env.CI,
+        // PORT makes siteUrl() (links on /connect and in MCP replies) point at this server.
+        env: { PORT: String(port) },
+        // Never reuse a server already on this port: it may be another checkout's. Use E2E_BASE_URL for that.
+        reuseExistingServer: false,
         timeout: 180_000,
       }
     : undefined,
