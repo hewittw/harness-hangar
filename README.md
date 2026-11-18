@@ -20,7 +20,7 @@ Live: https://harness-hangar.vercel.app
 
 4. **Install.** In an empty folder, run `/mcp__hangar__install-harness` (optionally with a harness name). Claude calls `get_harness`, which returns the files to write: `AGENTS.md`, `CLAUDE.md`, `.claude/skills/`, `.claude/agents/`, `.claude/settings.json`, `.mcp.json` and any hook scripts. Claude asks before overwriting files, then tells you which env vars to set. Restart Claude Code so the new setup loads.
 
-MCP tools: `save_harness`, `list_harnesses`, `get_harness`, `compose_harness`. MCP prompts: `save-harness`, `install-harness`.
+MCP tools: `save_harness`, `list_harnesses`, `get_harness`, `compose_harness`, `update_harness` (rename or change the description), `delete_harness` (needs `confirm: true`, and Claude asks you first). MCP prompts: `save-harness`, `install-harness`.
 
 ## Architecture
 
@@ -77,6 +77,16 @@ npm install
 npm run dev     # http://localhost:3000
 npm run check   # lint, typecheck, tests, build
 ```
+
+### End-to-end tests
+
+```bash
+npx playwright install chromium   # once
+npm run e2e:users                 # once: creates the Clerk test users, prints their ids
+npm run test:e2e                  # starts `next dev` on port 3100 (E2E_PORT) and runs e2e/
+```
+
+The tests use the keys in `.env.local` and skip themselves when keys are missing. Sign-in tests need Clerk development-instance keys. Global setup signs test user A in once and saves the browser state to `playwright/.clerk/` (git-ignored), and later runs reuse it while the session lasts, because Clerk rate-limits sign-ins. The RLS test writes rows to the real Supabase project and deletes them afterwards, even when it fails. Set `E2E_BASE_URL` to test an app that is already running instead.
 
 ## Quality gates
 
