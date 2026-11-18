@@ -127,7 +127,7 @@ function HarnessCard({ h, deny }: { h: HarnessSummary; deny: number }) {
       <div className="relative mt-auto flex flex-wrap gap-1.5 pt-3">
         {KIND_ORDER.filter((k) => h.counts[k]).map((k) => (
           <span key={k} className="ds-chip">
-            {h.counts[k]} {h.counts[k] === 1 ? KIND_LABEL[k].one : KIND_LABEL[k].many.toLowerCase()}
+            {h.counts[k]} {h.counts[k] === 1 ? KIND_LABEL[k].one : KIND_LABEL[k].many.replace(/^[A-Z][a-z]/, (m) => m.toLowerCase())}
           </span>
         ))}
         {deny > 0 && <span className="ds-chip ds-chip-danger">{deny} deny</span>}

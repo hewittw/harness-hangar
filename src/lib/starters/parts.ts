@@ -55,7 +55,8 @@ export const prettierHook = (): PartInput => ({
     hooks: [
       {
         type: "command",
-        command: `jq -r '.tool_input.file_path // empty' | xargs -r -I{} npx prettier --write --ignore-unknown "{}"`,
+        // Skips quietly when jq isn't installed, so a fresh machine never sees an error on every edit.
+        command: `command -v jq >/dev/null 2>&1 || exit 0; jq -r '.tool_input.file_path // empty' | xargs -r -I{} npx prettier --write --ignore-unknown "{}" || true`,
         timeout: 30,
       },
     ],

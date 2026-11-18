@@ -22,6 +22,9 @@ export default function WelcomePage() {
         Your library already has four basic harnesses, so you can try an install right away. Want more? Add a starter pack for
         the kind of work you do, or skip ahead and connect Claude Code.
       </p>
+      <Link href="/connect" className="ds-btn ds-btn-ghost mt-6 !px-0 text-accent hover:!bg-transparent">
+        Skip for now: connect Claude Code →
+      </Link>
       <Suspense fallback={<div className="mt-12 h-96 animate-pulse rounded-ds-lg bg-sunken" />}>
         <Picker />
       </Suspense>
