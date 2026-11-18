@@ -1,7 +1,7 @@
-import Link from "next/link";
 import { Suspense, type ReactNode } from "react";
 import { Show, SignUpButton } from "@clerk/nextjs";
 import { Wordmark } from "@/components/wordmark";
+import { SignedInCtas } from "./signed-in-ctas";
 
 const STAGES = [
   ["Connect", "One command adds Hangar to Claude Code for every folder on your computer."],
@@ -51,12 +51,7 @@ export default function Home() {
                 </a>
               </Show>
               <Show when="signed-in">
-                <Link href="/connect" className="ds-btn ds-btn-brand ds-btn-lg">
-                  Connect Claude Code <Arrow />
-                </Link>
-                <Link href="/library" className="ds-btn ds-btn-glass ds-btn-lg">
-                  Open your library
-                </Link>
+                <SignedInCtas variant="hero" />
               </Show>
             </div>
           </Suspense>
@@ -195,9 +190,7 @@ export default function Home() {
                     </SignUpButton>
                   </Show>
                   <Show when="signed-in">
-                    <Link href="/connect" className="ds-btn ds-btn-brand ds-btn-lg">
-                      Connect Claude Code <Arrow />
-                    </Link>
+                    <SignedInCtas variant="final" />
                   </Show>
                 </div>
               </Suspense>

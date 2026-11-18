@@ -24,6 +24,7 @@ export async function createToken(label: string): Promise<{ token?: string; erro
     return { error: "Could not create a token. Try again." };
   }
   revalidatePath("/connect");
+  revalidatePath("/"); // landing buttons depend on having an active token
   return { token };
 }
 
@@ -32,6 +33,7 @@ export async function revokeToken(formData: FormData) {
   const id = String(formData.get("id") ?? "");
   await db.from("api_tokens").update({ revoked_at: new Date().toISOString() }).eq("id", id);
   revalidatePath("/connect");
+  revalidatePath("/"); // landing buttons depend on having an active token
 }
 
 export async function deleteHarness(formData: FormData) {
