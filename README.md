@@ -20,7 +20,7 @@ Live: https://harness-hangar.vercel.app
 
 4. **Install.** In an empty folder, run `/mcp__hangar__install-harness` (optionally with a harness name). Claude calls `get_harness`, which returns the files to write: `AGENTS.md`, `CLAUDE.md`, `.claude/skills/`, `.claude/agents/`, `.claude/settings.json`, `.mcp.json` and any hook scripts. Claude asks before overwriting files, then tells you which env vars to set. Restart Claude Code so the new setup loads.
 
-MCP tools: `save_harness`, `list_harnesses`, `get_harness`, `compose_harness`. MCP prompts: `save-harness`, `install-harness`.
+MCP tools: `save_harness`, `list_harnesses`, `get_harness`, `compose_harness`, `update_harness` (rename or change the description), `delete_harness` (needs `confirm: true`, and Claude asks you first). MCP prompts: `save-harness`, `install-harness`.
 
 ## Architecture
 

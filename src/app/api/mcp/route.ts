@@ -4,7 +4,16 @@ import { harnessInput, PART_KINDS, type PartKind } from "@/lib/harness";
 import { buildInstallTree } from "@/lib/install";
 import { installHarnessPrompt, saveHarnessPrompt } from "@/lib/prompts";
 import { siteUrl } from "@/lib/site";
-import { authenticateToken, composeAndSave, getHarness, listHarnesses, saveHarness } from "@/lib/server/store";
+import { deleteHarnessInput, updateHarnessInput } from "@/lib/manage";
+import {
+  authenticateToken,
+  composeAndSave,
+  deleteHarness,
+  getHarness,
+  listHarnesses,
+  saveHarness,
+  updateHarness,
+} from "@/lib/server/store";
 
 export const maxDuration = 60;
 
@@ -200,6 +209,45 @@ const handler = createMcpHandler(
         }
         const auto = r.value.autoIncluded ? ` (${r.value.autoIncluded} deny rules were added automatically for safety)` : "";
         return text(`Saved composed harness "${name}" with ${r.value.parts.length} parts${auto}. View it at ${harnessUrl(r.value.id)}`);
+      }),
+    );
+
+    server.registerTool(
+      "update_harness",
+      {
+        title: "Update harness",
+        description:
+          "Rename a harness and/or change its one-line description in the user's Hangar library. Pass new_name, description, or both. " +
+          "Names must be unique in the user's library. Parts are not changed; to change parts, use save_harness with replace: true.",
+        inputSchema: updateHarnessInput,
+        annotations: { readOnlyHint: false, destructiveHint: false, idempotentHint: true, openWorldHint: false },
+      },
+      safe(async (input, ctx) => {
+        const r = await updateHarness(userOf(ctx), input);
+        if (!r.ok) return fail(r.message);
+        const changed = [
+          r.value.name !== input.name ? `renamed "${input.name}" to "${r.value.name}"` : null,
+          input.description !== undefined ? (r.value.description ? "updated the description" : "cleared the description") : null,
+        ].filter(Boolean);
+        return text(`Updated harness: ${changed.join(" and ")}. View it at ${harnessUrl(r.value.id)}`);
+      }),
+    );
+
+    server.registerTool(
+      "delete_harness",
+      {
+        title: "Delete harness",
+        description:
+          "Permanently delete one harness and all its parts from the user's Hangar library. This cannot be undone. " +
+          "Before calling, tell the user exactly which harness will be deleted and get their explicit yes in this conversation; " +
+          "never delete on your own initiative (for example to make room). Harnesses composed from it keep their own copies of its parts.",
+        inputSchema: deleteHarnessInput,
+        annotations: { readOnlyHint: false, destructiveHint: true, idempotentHint: true, openWorldHint: false },
+      },
+      safe(async ({ name }, ctx) => {
+        const r = await deleteHarness(userOf(ctx), name);
+        if (!r.ok) return fail(r.message);
+        return text(`Deleted harness "${name}" and all its parts.`);
       }),
     );
 
