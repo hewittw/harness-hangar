@@ -5,6 +5,9 @@ import { KIND_LABEL, KIND_ORDER } from "@/lib/labels";
 import { CopyButton } from "@/components/copy-button";
 import { ArrowIcon, Kicker, PlusIcon, RocketIcon, formatDate, pad2 } from "./ui";
 
+import { starterCards } from "@/lib/starters/cards";
+import { StarterPicker } from "@/components/starters/starter-picker";
+
 export const metadata = { title: "Library · Hangar" };
 
 const SAVE_CMD = "/mcp__hangar__save-harness";
@@ -40,15 +43,34 @@ export default async function LibraryPage() {
             Everything you saved from Claude Code or composed here. Open one to launch it in a new folder.
           </p>
         </div>
-        {harnesses.length > 0 && (
-          <Link href="/make" className="ds-btn ds-btn-brand ds-btn-lg shrink-0 self-start sm:self-auto">
-            <PlusIcon /> Make a harness
+        <div className="flex shrink-0 flex-wrap gap-3 self-start sm:self-auto">
+          <Link href="/library/starters" className="ds-btn ds-btn-glass ds-btn-lg">
+            Starter packs
           </Link>
-        )}
+          {harnesses.length > 0 && (
+            <Link href="/make" className="ds-btn ds-btn-brand ds-btn-lg">
+              <PlusIcon /> Make a harness
+            </Link>
+          )}
+        </div>
       </header>
 
       {harnesses.length === 0 ? (
-        <EmptyState />
+        <>
+          <EmptyState />
+          <section className="mt-16">
+            <div className="flex items-center gap-3">
+              <span className="ds-label !text-accent">Or</span>
+              <span className="h-px w-8 bg-hairline-2" />
+              <span className="ds-label">Starter libraries</span>
+            </div>
+            <h2 className="ds-h2 mt-4">Start with a ready-made library</h2>
+            <p className="ds-small mt-2 max-w-[60ch]">Load three example harnesses for the kind of work you do, then explore, compose and install them.</p>
+            <div className="mt-8">
+              <StarterPicker packs={starterCards()} />
+            </div>
+          </section>
+        </>
       ) : (
         <>
           <dl className="ds-glass mt-10 grid grid-cols-2 gap-x-6 rounded-ds-lg border border-hairline px-5 sm:px-6 lg:grid-cols-4 lg:gap-x-0 lg:divide-x lg:divide-hairline">

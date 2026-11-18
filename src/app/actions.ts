@@ -5,7 +5,8 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { generateToken, hashToken, tokenPrefix } from "@/lib/tokens";
 import { userDb } from "@/lib/server/user-db";
-import { composeAndSave, updateHarness } from "@/lib/server/store";
+import { composeAndSave, saveHarness, updateHarness } from "@/lib/server/store";
+import { getStarterPack } from "@/lib/starters";
 import { updateHarnessInput } from "@/lib/manage";
 
 const MAX_ACTIVE_TOKENS = 10;
@@ -135,4 +136,52 @@ async function getHarnessMeta(userId: string, id: string): Promise<{ name: strin
   const { data, error } = await db.from("harnesses").select("name, description").eq("user_id", userId).eq("id", id).maybeSingle();
   if (error) throw error;
   return data;
+}
+
+/* ---------------- starter packs ---------------- */
+
+export type StarterResult = { added: string[]; skipped: string[]; error?: string };
+
+/**
+ * Loads a starter library into the signed-in user's account. Each harness goes through saveHarness,
+ * so it gets the same validation, leak scan, quotas and rate limits as a real upload.
+ * Harnesses the user already has (same name) are skipped, so loading twice is harmless.
+ */
+export async function loadStarterPack(packId: string): Promise<StarterResult> {
+  const { userId } = await auth();
+  const added: string[] = [];
+  const skipped: string[] = [];
+  if (!userId) return { added, skipped, error: "Sign in again." };
+  const pack = getStarterPack(packId);
+  if (!pack) return { added, skipped, error: "That starter pack doesn't exist." };
+
+  for (const h of pack.harnesses) {
+    let r: Awaited<ReturnType<typeof saveHarness>>;
+    try {
+      r = await saveHarness(userId, h, { source: "upload" });
+    } catch (e) {
+      console.error("loadStarterPack", e);
+      return { added, skipped, error: "Hangar hit a database error. Try again in a minute." };
+    }
+    if (r.ok) {
+      added.push(h.name);
+      continue;
+    }
+    if (r.message.includes("already exists")) {
+      skipped.push(h.name);
+      continue;
+    }
+    const m = r.message.toLowerCase();
+    const error = m.includes("library is full")
+      ? "Your library is full. Delete a harness, then load the pack again."
+      : m.includes("per hour") || m.includes("rate") || m.includes("try again")
+        ? "You've hit the hourly save limit. Try again later."
+        : m.includes("mb")
+          ? "Your library is out of storage space. Delete a harness, then try again."
+          : "This pack couldn't be loaded.";
+    if (added.length) revalidatePath("/library");
+    return { added, skipped, error };
+  }
+  revalidatePath("/library");
+  return { added, skipped };
 }
