@@ -3,6 +3,8 @@ import { userDb } from "@/lib/server/user-db";
 import { siteUrl } from "@/lib/site";
 import { revokeToken } from "@/app/actions";
 import { TokenMaker } from "./token-maker";
+import { ensureSeeded } from "@/lib/server/seed";
+import { listHarnesses } from "@/lib/server/store";
 
 export const metadata = { title: "Connect · Hangar" };
 
@@ -15,17 +17,49 @@ const when = (iso: string) => {
   return d.toLocaleString("en-US", { month: "short", day: "numeric", year: sameYear ? undefined : "numeric", hour: "numeric", minute: "2-digit" });
 };
 
-const NEXT_STEPS: { cmd: string; text: ReactNode }[] = [
+// Simplest first: Research papers has no MCP servers, hooks or env vars to set up.
+const SIMPLEST_FIRST = ["Research papers", "Family calendar & school", "Landing page studio", "Product engineer"];
+
+const installCmd = (name: string | null) =>
+  name ? `/mcp__hangar__install-harness ${/\s/.test(name) ? `"${name}"` : name}` : "/mcp__hangar__install-harness";
+
+const nextSteps = (tryName: string | null): { cmd: string; text: ReactNode }[] => [
   { cmd: "/mcp", text: <>Check that <span className="font-semibold text-ink">hangar</span> says connected.</> },
   {
-    cmd: "/mcp__hangar__install-harness",
-    text: "Try it now: in a new empty folder, pick one of the basics already in your library and install it.",
+    cmd: installCmd(tryName),
+    text: tryName
+      ? `Try it now: in a new empty folder, install "${tryName}", the simplest harness in your library. Or leave the name off to pick from a list.`
+      : "Try it now: in a new empty folder, run this and pick a harness from your library.",
   },
-  { cmd: "/mcp__hangar__save-harness", text: "In a project you like: save your own harness to your library." },
+  {
+    cmd: "/mcp__hangar__save-harness",
+    text: (
+      <>
+        Save your own: open a terminal in the <span className="font-semibold text-ink">root folder</span> of a project whose
+        Claude setup you like (where its <code className="ds-mono text-ink">CLAUDE.md</code> or{" "}
+        <code className="ds-mono text-ink">.claude/</code> folder is), start <code className="ds-mono text-ink">claude</code>,
+        then run this. Claude shows exactly what it will upload before saving.
+      </>
+    ),
+  },
 ];
 
+// "just now", "5 min ago", "3 h ago", "2 days ago": independent of the server's time zone.
+const ago = (iso: string) => {
+  const mins = Math.max(0, Math.round((Date.now() - new Date(iso).getTime()) / 60000));
+  if (mins < 1) return "just now";
+  if (mins < 60) return `${mins} min ago`;
+  const hrs = Math.round(mins / 60);
+  if (hrs < 24) return `${hrs} h ago`;
+  const days = Math.round(hrs / 24);
+  return `${days} day${days === 1 ? "" : "s"} ago`;
+};
+
 export default async function ConnectPage() {
-  const { db } = await userDb();
+  const { db, userId } = await userDb();
+  await ensureSeeded(userId);
+  const names = (await listHarnesses(userId, db).catch(() => [])).map((h) => h.name);
+  const tryName = SIMPLEST_FIRST.find((n) => names.includes(n)) ?? names[0] ?? null;
   const { data, error } = await db
     .from("api_tokens")
     .select("id, label, token_prefix, created_at, last_used_at, revoked_at")
@@ -50,13 +84,25 @@ export default async function ConnectPage() {
       {/* ================= setup ================= */}
       <Section n="01" kicker="Setup">
         <div className="grid items-start gap-5 lg:grid-cols-[1.35fr_1fr] lg:gap-6">
-          <TokenMaker mcpUrl={`${siteUrl()}/api/mcp`} />
+          <TokenMaker
+            mcpUrl={`${siteUrl()}/api/mcp`}
+            tryCmd={installCmd(tryName)}
+            connected={
+              active.length
+                ? {
+                    count: active.length,
+                    latestLabel: active[0].label,
+                    latestUsed: active[0].last_used_at ? ago(active[0].last_used_at) : null,
+                  }
+                : null
+            }
+          />
 
           <div className="ds-card p-6 sm:p-7">
             <span className="ds-label">After you paste it</span>
             <h2 className="ds-h3 mt-4">Then in Claude Code</h2>
             <ol className="mt-5 space-y-4">
-              {NEXT_STEPS.map((s, i) => (
+              {nextSteps(tryName).map((s, i) => (
                 <li key={s.cmd} className="flex gap-3.5">
                   <span
                     className="grid h-7 w-7 shrink-0 place-items-center rounded-full font-[family-name:var(--font-code)] text-[11.5px] text-white"
@@ -134,7 +180,7 @@ export default async function ConnectPage() {
                 <div className="flex flex-wrap items-center justify-between gap-3 sm:justify-end">
                   {t.last_used_at ? (
                     <span className="ds-chip ds-chip-ok">
-                      <span className="ds-dot" /> Last used {when(t.last_used_at)}
+                      <span className="ds-dot" /> Last used {ago(t.last_used_at)}
                     </span>
                   ) : (
                     <span className="ds-chip">Never used</span>
