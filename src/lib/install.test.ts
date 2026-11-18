@@ -52,4 +52,17 @@ describe("buildInstallTree", () => {
   it("summarizes the contents", () => {
     expect(tree.summary).toBe("2 rules, 1 skill, 1 subagent, 1 MCP server, 2 permissions, 1 hook");
   });
+
+  it("writes a script shared by several hooks once, and ignores ${...} inside code for env vars", () => {
+    const shared = { path: "rules.mjs", content: "export const r = (part, reason) => `${part}: ${reason}`;" };
+    const t = buildInstallTree({
+      name: "x",
+      parts: [
+        { kind: "hook", name: "a", content: { event: "PreToolUse", matcher: "Bash", hooks: [{ type: "command", command: "node .claude/hooks/a.mjs" }], files: [{ path: "a.mjs", content: "import './rules.mjs'" }, shared] } },
+        { kind: "hook", name: "b", content: { event: "PreToolUse", matcher: "Write", hooks: [{ type: "command", command: "node .claude/hooks/b.mjs" }], files: [{ path: "b.mjs", content: "import './rules.mjs'" }, shared] } },
+      ],
+    });
+    expect(t.files.filter((f) => f.path === ".claude/hooks/rules.mjs")).toHaveLength(1);
+    expect(t.envVars).toEqual([]);
+  });
 });

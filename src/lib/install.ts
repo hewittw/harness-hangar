@@ -70,8 +70,12 @@ export function buildInstallTree(harness: { name: string; description?: string |
     files.push({ path: ".claude/settings.json", content: JSON.stringify(settings, null, 2) + "\n" });
   }
 
+  // Env vars come only from config files. Skill and hook source code uses ${...} for its own purposes.
   const envVars = new Set<string>();
-  for (const f of files) for (const m of f.content.matchAll(PLACEHOLDER_G)) envVars.add(m[1]);
+  for (const f of files) {
+    if (f.path !== ".mcp.json" && f.path !== ".claude/settings.json") continue;
+    for (const m of f.content.matchAll(PLACEHOLDER_G)) envVars.add(m[1]);
+  }
 
   const count = (n: number, w: string) => `${n} ${w}${n === 1 ? "" : "s"}`;
   const summary = [
@@ -83,5 +87,11 @@ export function buildInstallTree(harness: { name: string; description?: string |
     count(hooks.length, "hook"),
   ].join(", ");
 
-  return { files, envVars: [...envVars].sort(), summary };
+  return { files: dedupeByPath(files), envVars: [...envVars].sort(), summary };
+}
+
+/** Hooks often share a script (e.g. a common rules file). Write each path once; the first version wins. */
+function dedupeByPath(files: InstallFile[]): InstallFile[] {
+  const seen = new Set<string>();
+  return files.filter((f) => (seen.has(f.path) ? false : (seen.add(f.path), true)));
 }
