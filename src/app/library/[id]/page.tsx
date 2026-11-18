@@ -16,7 +16,7 @@ export default async function HarnessPage({ params }: PageProps<"/library/[id]">
   if (!h) notFound();
 
   const tree = buildInstallTree(h);
-  const installCmd = `/mcp__hangar__install-harness ${h.name}`;
+  const installCmd = `/mcp__hangar__install-harness ${/\s/.test(h.name) ? `"${h.name}"` : h.name}`;
   const byKind = (k: StoredPart["kind"]) => h.parts.filter((p) => p.kind === k);
 
   return (

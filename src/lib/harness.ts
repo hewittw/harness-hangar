@@ -37,7 +37,11 @@ export const skillContent = z.object({ files: files.min(1) }).refine(
   { message: "a skill needs a SKILL.md file" },
 );
 export const agentContent = z.object({ content: z.string().min(1).max(LIMITS.maxFileBytes) });
-export const mcpServerContent = z.object({ config: z.record(z.string(), z.unknown()) });
+export const mcpServerContent = z.object({
+  config: z
+    .record(z.string(), z.unknown())
+    .refine((c) => JSON.stringify(c).length <= 20_000, { message: "an MCP server config must be under 20 KB" }),
+});
 export const permissionContent = z.object({
   effect: z.enum(["allow", "deny", "ask"]),
   rule: z.string().min(1).max(300),
