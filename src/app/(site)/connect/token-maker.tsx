@@ -4,8 +4,12 @@ import { useState, useTransition } from "react";
 import { createToken } from "@/app/actions";
 import { CopyButton } from "@/components/copy-button";
 
-export function TokenMaker({ mcpUrl }: { mcpUrl: string }) {
+type Connected = { count: number; latestLabel: string; latestUsed: string | null };
+const TRY_CMD = "/mcp__hangar__install-harness";
+
+export function TokenMaker({ mcpUrl, connected }: { mcpUrl: string; connected: Connected | null }) {
   const [label, setLabel] = useState("My laptop");
+  const [adding, setAdding] = useState(false);
   const [token, setToken] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [pending, start] = useTransition();
@@ -39,9 +43,56 @@ export function TokenMaker({ mcpUrl }: { mcpUrl: string }) {
               again. Lost it? Revoke it below and make a new one.
             </p>
           </div>
-          <button type="button" className="ds-btn ds-btn-ghost ds-btn-sm -ml-3 mt-5 !px-3" onClick={() => setToken(null)}>
-            Done, make another
+          <button
+            type="button"
+            className="ds-btn ds-btn-solid mt-6"
+            onClick={() => {
+              setToken(null);
+              setAdding(false);
+            }}
+          >
+            I&apos;ve run it: done
           </button>
+        </div>
+      </div>
+    );
+  }
+
+  if (connected && !adding) {
+    const n = connected.count;
+    return (
+      <div className="ds-glow ds-noise relative overflow-hidden p-6 sm:p-7">
+        <div className="pointer-events-none absolute -right-20 -top-24 h-56 w-72 rounded-full opacity-25 blur-[70px]" style={{ background: "var(--brand)" }} aria-hidden />
+        <div className="relative">
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <span className="ds-label">Connect</span>
+            <span className="ds-chip ds-chip-ok">
+              <span className="ds-dot" /> Connected
+            </span>
+          </div>
+          <h2 className="ds-h2 mt-5 !text-[clamp(24px,3vw,32px)]">Claude Code is connected</h2>
+          <p className="ds-small mt-2 max-w-[52ch]">
+            {n} active token{n === 1 ? "" : "s"}. Latest: <span className="font-semibold text-ink">{connected.latestLabel}</span>
+            {connected.latestUsed ? (
+              <>, last used {connected.latestUsed}.</>
+            ) : (
+              <>, not used yet. Run its command in your terminal, then type /mcp in Claude Code to check.</>
+            )}
+          </p>
+          <div className="mt-6 rounded-ds-md border border-hairline bg-sunken/60 p-4">
+            <p className="ds-label !text-accent">Try it now</p>
+            <p className="ds-small mt-2">In a new, empty folder, start Claude Code and run this. Press Enter and Claude lists your harnesses.</p>
+            <div className="mt-3 flex flex-col gap-2 sm:flex-row sm:items-start">
+              <pre className="ds-code min-w-0 flex-1 !break-normal">{TRY_CMD}</pre>
+              <CopyButton text={TRY_CMD} />
+            </div>
+          </div>
+          <div className="mt-6 flex flex-wrap items-center gap-3">
+            <button type="button" className="ds-btn ds-btn-glass" onClick={() => setAdding(true)}>
+              + Add another computer
+            </button>
+            <span className="ds-small">Each computer gets its own token.</span>
+          </div>
         </div>
       </div>
     );
@@ -67,11 +118,17 @@ export function TokenMaker({ mcpUrl }: { mcpUrl: string }) {
       <div className="relative">
         <div className="flex flex-wrap items-center justify-between gap-3">
           <span className="ds-label">Connect · step 1 of 2</span>
-          <span className="ds-chip">
-            <span className="ds-dot text-ink-3" /> No token yet
-          </span>
+          {connected ? (
+            <button type="button" className="ds-btn ds-btn-ghost ds-btn-sm" onClick={() => setAdding(false)}>
+              Cancel
+            </button>
+          ) : (
+            <span className="ds-chip">
+              <span className="ds-dot text-ink-3" /> No token yet
+            </span>
+          )}
         </div>
-        <h2 className="ds-h2 mt-5 !text-[clamp(24px,3vw,32px)]">Make a token</h2>
+        <h2 className="ds-h2 mt-5 !text-[clamp(24px,3vw,32px)]">{connected ? "Add another computer" : "Make a token"}</h2>
         <p className="ds-small mt-2 max-w-[48ch]">
           Each computer gets its own token, so you can revoke one without touching the others.
         </p>

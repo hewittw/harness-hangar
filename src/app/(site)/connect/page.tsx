@@ -50,7 +50,18 @@ export default async function ConnectPage() {
       {/* ================= setup ================= */}
       <Section n="01" kicker="Setup">
         <div className="grid items-start gap-5 lg:grid-cols-[1.35fr_1fr] lg:gap-6">
-          <TokenMaker mcpUrl={`${siteUrl()}/api/mcp`} />
+          <TokenMaker
+            mcpUrl={`${siteUrl()}/api/mcp`}
+            connected={
+              active.length
+                ? {
+                    count: active.length,
+                    latestLabel: active[0].label,
+                    latestUsed: active[0].last_used_at ? when(active[0].last_used_at) : null,
+                  }
+                : null
+            }
+          />
 
           <div className="ds-card p-6 sm:p-7">
             <span className="ds-label">After you paste it</span>
