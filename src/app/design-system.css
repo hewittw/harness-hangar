@@ -169,7 +169,9 @@
   .ds-noise { position: relative; isolation: isolate; }
   .ds-noise::after {
     content: ""; position: absolute; inset: 0; pointer-events: none; z-index: 1;
-    background-image: var(--noise); opacity: var(--noise-opacity); mix-blend-mode: overlay;
+    /* No blend mode: a full-screen blended layer over animated blobs forces Chrome to repaint everything each frame. */
+    background-image: var(--noise); opacity: calc(var(--noise-opacity) * 0.7);
+    -webkit-mask-image: linear-gradient(to bottom, #000 55%, transparent); mask-image: linear-gradient(to bottom, #000 55%, transparent);
   }
 
   /* ---------- type ---------- */
@@ -215,6 +217,7 @@
   /* Brand: the gradient, with a soft glow underneath (Stripe). */
   /* border: 0 + border-box origin: a transparent border let the oversized gradient wrap and show a sliver at the left edge. */
   .ds-btn-brand {
+    isolation: isolate; will-change: transform; /* own layer: always painted above the animated hero */
     border: 0; background-origin: border-box; background-repeat: no-repeat;
     color: #fff; background-image: var(--brand); background-size: 160% 100%; background-position: 0% 50%;
     box-shadow: inset 0 1px 0 rgb(255 255 255 / 0.35), 0 12px 32px -10px color-mix(in oklab, var(--g3) 70%, transparent);
@@ -265,8 +268,9 @@
 
   /* ---------- hero backdrops ---------- */
   /* Stripe: a skewed band of slowly drifting color blobs. */
-  .ds-mesh { position: absolute; inset: -20% -10% auto -10%; height: 120%; transform: skewY(-9deg); transform-origin: top left; overflow: hidden; opacity: var(--mesh-opacity); z-index: 0; }
-  .ds-mesh > i { position: absolute; border-radius: 50%; filter: blur(70px); animation: ds-drift 22s var(--ease) infinite alternate; }
+  .ds-mesh { position: absolute; inset: -20% -10% auto -10%; height: 120%; transform: skewY(-9deg); transform-origin: top left; overflow: hidden; opacity: var(--mesh-opacity); z-index: 0; contain: paint; pointer-events: none; }
+  /* will-change keeps each blurred blob on its own GPU layer, so drifting doesn't repaint the page (or skip painting what's on top). */
+  .ds-mesh > i { position: absolute; border-radius: 50%; filter: blur(70px); animation: ds-drift 22s var(--ease) infinite alternate; will-change: transform; }
   .ds-mesh > i:nth-child(1) { width: max(52vw, 360px); height: max(52vw, 360px); left: -6vw; top: -12vw; background: var(--g1); }
   .ds-mesh > i:nth-child(2) { width: max(46vw, 320px); height: max(46vw, 320px); left: 22vw; top: -16vw; background: var(--g2); animation-duration: 26s; animation-delay: -6s; }
   .ds-mesh > i:nth-child(3) { width: max(50vw, 340px); height: max(50vw, 340px); left: 48vw; top: -10vw; background: var(--g3); animation-duration: 30s; animation-delay: -12s; }
