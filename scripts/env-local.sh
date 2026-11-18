@@ -18,7 +18,7 @@ ask() { # name, regex the value must match, hidden (1/0)
     val="${val#"${val%%[![:space:]]*}"}"   # trim leading space
     val="${val%"${val##*[![:space:]]}"}"   # trim trailing space
     val="${val#\"}"; val="${val%\"}"       # drop surrounding quotes
-    val="${val#*=}"                        # accept a pasted NAME=value line
+    if [[ "$val" =~ ^[A-Z_]+= ]]; then val="${val#*=}"; fi  # accept a pasted NAME=value line
     if [[ "$val" =~ $re ]]; then
       printf -v "$name" '%s' "$val"
       return
