@@ -1,12 +1,13 @@
-import { Suspense } from "react";
 import { SignUp } from "@clerk/nextjs";
+import { authAppearance } from "../../sign-in/auth-appearance";
+import { AuthShell } from "../../sign-in/auth-shell";
+
+export const metadata = { title: "Sign up · Hangar" };
 
 export default function Page() {
   return (
-    <div className="flex justify-center py-16">
-      <Suspense>
-        <SignUp />
-      </Suspense>
-    </div>
+    <AuthShell kicker="Prepare for launch">
+      <SignUp appearance={authAppearance} />
+    </AuthShell>
   );
 }
