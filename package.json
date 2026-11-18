@@ -11,6 +11,7 @@
     "test": "vitest run",
     "check": "npm run lint && npm run typecheck && npm run test && npm run build",
     "prepare": "husky",
+    "test:e2e": "playwright test",
     "save:fixture": "node scripts/save-fixture.mjs"
   },
   "dependencies": {
@@ -25,6 +26,10 @@
     "zod": "^4.6.7"
   },
   "devDependencies": {
+    "@clerk/backend": "^3.30.0",
+    "@clerk/testing": "^2.3.1",
+    "@next/env": "^16.4.6",
+    "@playwright/test": "^1.65.1",
     "@tailwindcss/turbopack": "4.3.3",
     "@types/node": "^20",
     "@types/react": "^19",
