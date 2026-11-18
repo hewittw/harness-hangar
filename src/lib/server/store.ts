@@ -5,6 +5,9 @@ import { hashToken, looksLikeToken } from "../tokens";
 import { LIMITS, partInput, type HarnessInput, type PartInput, type PartKind, type StoredPart } from "../harness";
 import { formatFindings, scanHarnessMeta, scanParts } from "../scan";
 import { compose, keyOf } from "../compose";
+import { checkStorageBudget, saveLimitMessage, secondsUntilReset } from "../limits";
+import { siteUrl } from "../site";
+import { underRateLimit, userStorageBytes } from "./usage";
 import { harnessNameTaken, harnessNotFound, planUpdate, type UpdateHarnessInput } from "../manage";
 
 /**
@@ -83,6 +86,9 @@ export async function saveHarness(
   const findings = [...scanHarnessMeta(input), ...scanParts(input.parts)];
   if (findings.length) return { ok: false, message: formatFindings(findings) };
 
+  // Counted only once the upload is valid, so fixing scan findings doesn't burn the quota.
+  if (!(await underRateLimit(userId, "save"))) return { ok: false, message: saveLimitMessage(secondsUntilReset("save")) };
+
   const existing = await findHarnessId(userId, input.name);
   if (!existing) {
     const { count, error: countError } = await admin()
@@ -97,6 +103,15 @@ export async function saveHarness(
       };
     }
   }
+  // Fails closed: if usage can't be measured, nothing is written.
+  let usedBytes = 0;
+  try {
+    usedBytes = await userStorageBytes(userId, existing);
+  } catch (e) {
+    fail("user storage bytes", e);
+  }
+  const budget = checkStorageBudget({ usedBytes, incomingBytes: bytes, libraryUrl: `${siteUrl()}/library` });
+  if (!budget.ok) return budget;
   const { data, error } = await admin().rpc("save_harness", {
     p_user_id: userId,
     p_name: input.name,

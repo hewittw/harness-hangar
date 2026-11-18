@@ -14,6 +14,8 @@ import {
   saveHarness,
   updateHarness,
 } from "@/lib/server/store";
+import { underRateLimit } from "@/lib/server/usage";
+import { rateLimitedBody, secondsUntilReset } from "@/lib/limits";
 
 export const maxDuration = 60;
 
@@ -300,8 +302,26 @@ async function authed(req: Request): Promise<Response> {
       { status: 401, headers: { "WWW-Authenticate": 'Bearer error="invalid_token", error_description="Get a token at /connect"' } },
     );
   }
+  if (!(await underRateLimit(who.tokenId, "mcp_request"))) {
+    const retryAfter = secondsUntilReset("mcp_request");
+    return Response.json(rateLimitedBody(await jsonRpcId(req), retryAfter), {
+      status: 429,
+      headers: { "Retry-After": String(retryAfter) },
+    });
+  }
   (req as Request & { auth?: unknown }).auth = { token, clientId: who.userId, scopes: [], extra: { tokenId: who.tokenId } };
   return handler(req);
+}
+
+/** The JSON-RPC id of a single POSTed request, so the 429 answers the call it refuses. Null otherwise. */
+async function jsonRpcId(req: Request): Promise<string | number | null> {
+  if (req.method !== "POST") return null;
+  try {
+    const id = ((await req.json()) as { id?: unknown })?.id;
+    return typeof id === "string" || typeof id === "number" ? id : null;
+  } catch {
+    return null;
+  }
 }
 
 export { authed as GET, authed as POST, authed as DELETE };
